@@ -31,10 +31,25 @@ wire [ 31:0] br_target;
 wire         br_stall;
 assign {br_stall,br_taken,br_target} = br_bus;
 
+//exception tag: add here
+reg       fs_excp_valid;
+reg [6:2] fs_excp_execode;
+always @(posedge clk) begin
+    if(reset) begin
+        fs_excp_valid   <=0;
+        fs_excp_execode <=5'h00;
+    end
+    //else if(0) begin
+    //    excp_valid<=0;
+    //end
+end
+
 wire [31:0] fs_inst;
 reg  [31:0] fs_pc;
-assign fs_to_ds_bus = {fs_inst ,
-                       fs_pc   };
+assign fs_to_ds_bus = { fs_excp_valid,  //69
+                        fs_excp_execode,//68:64
+                        fs_inst ,       //63:32
+                        fs_pc   };      //31:0
 
 // pre-IF stage
 assign to_fs_valid  = ~reset;

@@ -105,9 +105,28 @@ wire [3:0]  sh_wen        ;
 wire [3:0]  swl_wen       ;
 wire [3:0]  swr_wen       ;
 
+//exception tag: add here
+reg       es_excp_valid;
+reg [6:2] es_excp_execode;
+always @(posedge clk) begin
+    if(reset) begin
+        es_excp_valid   <=0;
+        es_excp_execode <=5'h00;
+    end
+    else if(ds_to_es_valid&&ds_to_es_bus[220]) begin
+        es_excp_valid   <=1;
+        es_excp_execode <=ds_to_es_bus[219:215];
+    end
+    //else if(0) begin
+    //    excp_valid<=0;
+    //end
+end
+
 assign es_res_from_mem = es_load_op;
 assign es_result = {32{es_mfhi}}&hi | {32{es_mflo}}&lo | es_alu_result;
-assign es_to_ms_bus = { es_rt_value     ,//109:78
+assign es_to_ms_bus = { es_excp_valid   ,//115
+                        es_excp_execode ,//114:110
+                        es_rt_value     ,//109:78
                         es_mem_op_wl    ,//77
                         es_mem_op_wr    ,//76
                         es_mem_op_w     ,//75

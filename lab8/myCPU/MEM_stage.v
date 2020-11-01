@@ -57,6 +57,24 @@ assign addr_offset1   =(ms_alu_result[1:0] == 2'b01);
 assign addr_offset2   =(ms_alu_result[1:0] == 2'b10);
 assign addr_offset3   =(ms_alu_result[1:0] == 2'b11);
 
+//exception tag: add here
+reg ms_excp_valid;
+reg [6:2] ms_excp_execode;
+always @(posedge clk) begin
+    if(reset) begin
+        ms_excp_valid   <=0;
+        ms_excp_execode <=5'h00;
+    end    
+    else if(es_to_ms_valid&&es_to_ms_bus[115]) begin
+        ms_excp_valid   <=1;
+        ms_excp_execode <=es_to_ms_bus[114:110];
+    end
+    //else if(?) begin
+    //    ms_excp_valid   <=1;
+    //    ms_excp_execode <=5'h??;
+    //end
+end
+
 assign out_ms_valid = ms_valid;
 assign {ms_rt_value     ,//109:78
         ms_mem_op_wl    ,//77
@@ -76,10 +94,12 @@ assign {ms_rt_value     ,//109:78
 wire [31:0] mem_result;
 wire [31:0] ms_final_result;
 
-assign ms_to_ws_bus = {ms_gr_we       ,  //69:69
-                       ms_dest        ,  //68:64
-                       ms_final_result,  //63:32
-                       ms_pc             //31:0
+assign ms_to_ws_bus = { ms_excp_valid  ,  //75
+                        ms_excp_execode,  //74:70
+                        ms_gr_we       ,  //69:69
+                        ms_dest        ,  //68:64
+                        ms_final_result,  //63:32
+                        ms_pc             //31:0
                       };
 assign ms_to_ds_fw_bus ={ms_gr_we,      //37:37
                         ms_dest,        //36:32

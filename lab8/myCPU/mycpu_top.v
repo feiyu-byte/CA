@@ -30,6 +30,7 @@ wire         fs_to_ds_valid;
 wire         ds_to_es_valid;
 wire         es_to_ms_valid;
 wire         ms_to_ws_valid;
+wire         ws_to_cp0_valid;
 wire         out_es_valid;
 wire         out_ms_valid;
 wire         out_ws_valid;
@@ -42,6 +43,7 @@ wire [`BR_BUS_WD       -1:0] br_bus;
 wire [`FW_BUS_WD       -1:0] es_to_ds_fw_bus;
 wire [`FW_BUS_WD       -1:0] ms_to_ds_fw_bus;
 wire [`FW_BUS_WD       -1:0] ws_to_ds_fw_bus;
+wire [`WS_TO_CP0_BUS_WD-1:0] ws_to_cp0_bus;
 // IF stage
 if_stage if_stage(
     .clk            (clk            ),
@@ -149,7 +151,18 @@ wb_stage wb_stage(
     .debug_wb_pc      (debug_wb_pc      ),
     .debug_wb_rf_wen  (debug_wb_rf_wen  ),
     .debug_wb_rf_wnum (debug_wb_rf_wnum ),
-    .debug_wb_rf_wdata(debug_wb_rf_wdata)
+    .debug_wb_rf_wdata(debug_wb_rf_wdata),
+    //to cp0
+    .ws_to_cp0_bus    (ws_to_cp0_bus    ),
+    .ws_to_cp0_valid  (ws_to_cp0_valid  )
+);
+// CP0
+cp0 cp0(
+    .clk            (clk            ),
+    .reset          (reset          ),
+    //from ws
+    .ws_to_cp0_bus  (ws_to_cp0_bus  ),
+    .ws_to_cp0_valid(ws_to_cp0_valid)    
 );
 
 endmodule

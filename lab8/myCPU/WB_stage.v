@@ -17,7 +17,10 @@ module wb_stage(
     output [31:0] debug_wb_pc     ,
     output [ 3:0] debug_wb_rf_wen ,
     output [ 4:0] debug_wb_rf_wnum,
-    output [31:0] debug_wb_rf_wdata
+    output [31:0] debug_wb_rf_wdata,
+    //to cp0
+    output [`WS_TOCP0_BUS_WD-1:0] ws_to_cp0_bus    ,
+    output                        ws_to_cp0_valid  
 );
 
 reg         ws_valid;
@@ -33,6 +36,24 @@ assign {ws_gr_we       ,  //69:69
         ws_final_result,  //63:32
         ws_pc             //31:0
        } = ms_to_ws_bus_r;
+
+//exception tag: add here
+reg ws_excp_valid;
+reg [6:2] ws_excp_execode;
+always @(posedge clk) begin
+    if(reset) begin
+        ws_excp_valid   <=0;
+        ws_excp_execode <=5'h00;
+    end    
+    else if(ms_to_ws_valid&&ms_to_ws_bus[75]) begin
+        ws_excp_valid   <=1;
+        ws_excp_execode <=ms_to_ws_bus[74:70];
+    end
+end
+assign ws_to_cp0_valid = ws_excp_valid;
+assign ws_to_cp0_bus = { ws_excp_execode,
+                         ws_pc
+};
 
 wire        rf_we;
 wire [4 :0] rf_waddr;

@@ -37,6 +37,24 @@ wire [31                 :0] fs_pc;
 reg  [`FS_TO_DS_BUS_WD -1:0] fs_to_ds_bus_r;
 assign fs_pc = fs_to_ds_bus[31:0];
 
+//exception tag: add here
+reg ds_excp_valid;
+reg [6:2] ds_excp_execode;
+always @(posedge clk) begin
+    if(reset) begin
+        ds_excp_valid   <=0;
+        ds_excp_execode <=5'h00;
+    end    
+    else if(fs_to_ds_valid&&fs_to_ds_bus[69]) begin
+        ds_excp_valid   <=1;
+        ds_excp_execode <=fs_to_ds_bus[68:64];
+    end
+    else if(inst_syscall) begin
+        ds_excp_valid   <=1;
+        ds_excp_execode <=5'h08;
+    end
+end
+
 wire [31:0] ds_inst;
 wire [31:0] ds_pc  ;
 assign {ds_inst,
@@ -144,6 +162,9 @@ wire 		inst_bltzal;
 wire 		inst_bgezal;
 wire 		inst_jalr;
 
+//lab8 added
+wire        inst_syscall;
+
 wire        dst_is_r31;  
 wire        dst_is_rt;   
 
@@ -170,7 +191,9 @@ wire 		mem_op_wl;
 assign br_stall = ds_ready_go;
 assign br_bus       = {br_stall,br_taken,br_target};
 
-assign ds_to_es_bus = { mem_op_wl	,//214
+assign ds_to_es_bus = { ds_excp_valid   ,//220
+                        ds_excp_execode ,//219:215
+                        mem_op_wl	,//214
 						mem_op_wr   ,//213
 						mem_op_w 	,//212
 						mem_op_bu 	,//211
@@ -299,6 +322,8 @@ assign inst_bltzal = op_d[6'h01] & rt_d[5'h10];
 assign inst_bgezal = op_d[6'h01] & rt_d[5'h11];
 assign inst_j      = op_d[6'h02];
 assign inst_jalr   = op_d[6'h00] & func_d[6'h09] & rt_d[5'h00] & sa_d[5'h00];
+
+assign inst_syscall= op_d[6'h00] & func_d[6'h0c];
 //add
 assign alu_op[ 0] = inst_addu   | inst_addiu | inst_add    | inst_addi | inst_lw  | inst_sw | inst_jal 
 				  | inst_bgezal | inst_jalr  | inst_bltzal | inst_lwr  | inst_lwl | inst_lb | inst_lbu 
