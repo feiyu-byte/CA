@@ -55,7 +55,13 @@ wire es_mem_op_hu         ;
 wire es_mem_op_h          ;
 
 assign out_es_valid = es_valid;
-assign {es_mem_op_wl    ,//214
+assign {
+        cp0_dest        ,//231:224
+        inst_eret       ,//223
+        inst_mtc0       ,//222
+        inst_mfc0       ,//221
+        padding_excp    ,//220:215
+        es_mem_op_wl    ,//214
         es_mem_op_wr    ,//213
         es_mem_op_w     ,//212
         es_mem_op_bu    ,//211
@@ -106,6 +112,11 @@ wire [3:0]  swl_wen       ;
 wire [3:0]  swr_wen       ;
 
 //exception tag: add here
+wire [5:0]  padding_excp;
+wire [7:0]  cp0_dest;
+wire        inst_eret;
+wire        inst_mtc0;
+wire        inst_mfc0;
 reg       es_excp_valid;
 reg [6:2] es_excp_execode;
 always @(posedge clk) begin
@@ -124,7 +135,12 @@ end
 
 assign es_res_from_mem = es_load_op;
 assign es_result = {32{es_mfhi}}&hi | {32{es_mflo}}&lo | es_alu_result;
-assign es_to_ms_bus = { es_excp_valid   ,//115
+assign es_to_ms_bus = { 
+                        cp0_dest        ,//126:119
+                        inst_eret       ,//118
+                        inst_mtc0       ,//117
+                        inst_mfc0       ,//116
+                        es_excp_valid   ,//115
                         es_excp_execode ,//114:110
                         es_rt_value     ,//109:78
                         es_mem_op_wl    ,//77

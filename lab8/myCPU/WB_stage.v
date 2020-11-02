@@ -30,8 +30,21 @@ wire        ws_gr_we;
 wire [ 4:0] ws_dest;
 wire [31:0] ws_final_result;
 wire [31:0] ws_pc;
+wire [31:0] ws_rt_value;
+wire [5:0]  padding_excp;
+wire        inst_eret;
+wire        inst_mtc0;
+wire        inst_mfc0;
+
 assign out_ws_valid = ws_valid;
-assign {ws_gr_we       ,  //69:69
+assign {
+        ws_rt_value     , //111:80
+        cp0_addr        , //86:79
+        inst_eret       , //78
+        inst_mtc0       , //77
+        inst_mfc0       , //76
+        padding_excp    , //75:70
+        ws_gr_we       ,  //69:69
         ws_dest        ,  //68:64
         ws_final_result,  //63:32
         ws_pc             //31:0
@@ -58,7 +71,8 @@ assign ws_to_cp0_bus = { ws_excp_execode,
 wire        mtc0_we;
 wire [7:0]  cp0_addr;
 wire [31:0] cp0_wdata;
-assign mtc0_we  =   ws_valid && ws_inst_mtc0 && !ws_excp_valid;
+assign mtc0_we  =   ws_valid && inst_mtc0 && !ws_excp_valid;
+assign cp0_wdata=   ws_rt_value;
 
 wire        rf_we;
 wire [4 :0] rf_waddr;
@@ -96,5 +110,13 @@ assign debug_wb_pc       = ws_pc;
 assign debug_wb_rf_wen   = {4{rf_we}};
 assign debug_wb_rf_wnum  = ws_dest;
 assign debug_wb_rf_wdata = ws_final_result;
-
+///TODO: ws_bd
+reg     ws_bd;
+assign ws_to_cp0_bus = {                            
+                        cp0_addr,       //77:70
+                        cp0_wdata,      //69:38
+                        ws_excp_execode,//37:33
+                        ws_pc,          //32:1
+                        ws_bd           //0
+};
 endmodule

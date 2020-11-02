@@ -17,6 +17,13 @@ wire [31:0] cp0_wdata;
 wire [4:0]  ws_excp_execode;
 wire [31:0] ws_pc;
 wire        ws_bd;
+
+assign {    cp0_addr,       //77:70
+            cp0_wdata,      //69:38
+            ws_excp_execode,//37:33
+            ws_pc,          //32:1
+            ws_bd           //0
+} = ws_to_cp0_bus;
 //{BD,TI,14'b0,       IP,   1'b0,execode,2'b0  } == cause
 // 31 30 29:16        15:8  7    6:2     1:0
 reg         cp0_cause_BD;

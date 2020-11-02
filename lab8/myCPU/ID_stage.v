@@ -38,6 +38,9 @@ reg  [`FS_TO_DS_BUS_WD -1:0] fs_to_ds_bus_r;
 assign fs_pc = fs_to_ds_bus[31:0];
 
 //exception tag: add here
+wire [5:0]  padding_excp;
+wire [7:0]  cp0_dest;
+assign cp0_dest = {rd,sel};
 reg ds_excp_valid;
 reg [6:2] ds_excp_execode;
 always @(posedge clk) begin
@@ -57,7 +60,9 @@ end
 
 wire [31:0] ds_inst;
 wire [31:0] ds_pc  ;
-assign {ds_inst,
+assign {
+        padding_excp    ,//69:64
+        ds_inst,
         ds_pc  } = fs_to_ds_bus_r;
 
 wire        rf_we   ;
@@ -194,7 +199,12 @@ wire 		mem_op_wl;
 assign br_stall = ds_ready_go;
 assign br_bus       = {br_stall,br_taken,br_target};
 
-assign ds_to_es_bus = { ds_excp_valid   ,//220
+assign ds_to_es_bus = { 
+                        cp0_dest        ,//231:224
+                        inst_eret       ,//223
+                        inst_mtc0       ,//222
+                        inst_mfc0       ,//221
+                        ds_excp_valid   ,//220
                         ds_excp_execode ,//219:215
                         mem_op_wl	,//214
 						mem_op_wr   ,//213
@@ -257,6 +267,7 @@ assign sa   = ds_inst[10: 6];
 assign func = ds_inst[ 5: 0];
 assign imm  = ds_inst[15: 0];
 assign jidx = ds_inst[25: 0];
+assign sel  = ds_inst[2 : 0];
 
 decoder_6_64 u_dec0(.in(op  ), .out(op_d  ));
 decoder_6_64 u_dec1(.in(func), .out(func_d));
