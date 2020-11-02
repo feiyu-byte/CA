@@ -164,6 +164,9 @@ wire 		inst_jalr;
 
 //lab8 added
 wire        inst_syscall;
+wire        inst_mfc0;
+wire        inst_mtc0;
+wire        inst_eret;
 
 wire        dst_is_r31;  
 wire        dst_is_rt;   
@@ -323,7 +326,11 @@ assign inst_bgezal = op_d[6'h01] & rt_d[5'h11];
 assign inst_j      = op_d[6'h02];
 assign inst_jalr   = op_d[6'h00] & func_d[6'h09] & rt_d[5'h00] & sa_d[5'h00];
 
-assign inst_syscall= op_d[6'h00] & func_d[6'h0c];
+assign inst_syscall = op_d[6'h00] & func_d[6'h0c];
+assign inst_eret    = op_d[6'h10] & rs_d[5'h10] & rt_d[5'd00] & rd_d[5'h00] & sa_d[5'h00] & func_d[6'h18];
+assign inst_mfc0    = op_d[6'h10] & rs_d[5'h00] & (ds_inst[10:3]==8'b0);
+assign inst_mtc0    = op_d[6'h10] & rs_d[5'h04] & (ds_inst[10:3]==8'b0);
+
 //add
 assign alu_op[ 0] = inst_addu   | inst_addiu | inst_add    | inst_addi | inst_lw  | inst_sw | inst_jal 
 				  | inst_bgezal | inst_jalr  | inst_bltzal | inst_lwr  | inst_lwl | inst_lb | inst_lbu 

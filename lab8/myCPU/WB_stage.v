@@ -19,7 +19,7 @@ module wb_stage(
     output [ 4:0] debug_wb_rf_wnum,
     output [31:0] debug_wb_rf_wdata,
     //to cp0
-    output [`WS_TOCP0_BUS_WD-1:0] ws_to_cp0_bus    ,
+    output [`WS_TO_CP0_BUS_WD-1:0] ws_to_cp0_bus    ,
     output                        ws_to_cp0_valid  
 );
 
@@ -54,6 +54,11 @@ assign ws_to_cp0_valid = ws_excp_valid;
 assign ws_to_cp0_bus = { ws_excp_execode,
                          ws_pc
 };
+//handle mtc0 & mfc0, using block to solve cp0 hazard
+wire        mtc0_we;
+wire [7:0]  cp0_addr;
+wire [31:0] cp0_wdata;
+assign mtc0_we  =   ws_valid && ws_inst_mtc0 && !ws_excp_valid;
 
 wire        rf_we;
 wire [4 :0] rf_waddr;
