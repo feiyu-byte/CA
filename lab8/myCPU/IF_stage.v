@@ -29,10 +29,11 @@ wire        to_fs_valid;
 wire [31:0] seq_pc;
 wire [31:0] nextpc;
 
+wire         make_bd;
 wire         br_taken;
 wire [ 31:0] br_target;
 wire         br_stall;
-assign {br_stall,br_taken,br_target} = br_bus;
+assign {make_bd,br_stall,br_taken,br_target} = br_bus;
 
 //exception tag: add here
 reg       fs_excp_valid;
@@ -50,7 +51,8 @@ end
 
 wire [31:0] fs_inst;
 reg  [31:0] fs_pc;
-assign fs_to_ds_bus = { fs_excp_valid,  //69
+assign fs_to_ds_bus = { fs_bd,          //70
+                        fs_excp_valid,  //69
                         fs_excp_execode,//68:64
                         fs_inst ,       //63:32
                         fs_pc   };      //31:0
@@ -92,6 +94,11 @@ assign inst_sram_addr  = nextpc;
 assign inst_sram_wdata = 32'b0;
 
 assign fs_inst         = inst_sram_rdata;
-///TODO: fs_bd
+
 reg     fs_bd;
+always @(posedge clk) begin
+    if(reset)   fs_bd <= 0;
+    else if(make_bd)
+                fs_bd <= 1;
+end
 endmodule

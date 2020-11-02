@@ -119,6 +119,7 @@ assign {
 } = cp0_general_bus;
 
 assign ms_to_ws_bus = { 
+                        ms_bd,          , //112
                         ms_rt_value     , //111:80
                         cp0_dest        , //86:79
                         inst_eret       , //78
@@ -155,7 +156,11 @@ assign mem_result = {32{ms_mem_op_h|ms_mem_op_hu|ms_mem_op_w|ms_mem_op_b|ms_mem_
 
 assign ms_final_result =    ms_res_from_mem ? mem_result
                                          : ms_alu_result;
-///TODO: ms_bd
-reg     ms_bd;
 
+reg     ms_bd;
+always @(posedge clk) begin
+    if(reset)   ms_bd <= 0;
+    else if(es_to_ms_valid && ms_allowin)
+                ms_bd <= es_to_ms_bus[127];
+end
 endmodule

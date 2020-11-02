@@ -207,11 +207,26 @@ wire 		mem_op_bu;
 wire 		mem_op_b;
 wire 		mem_op_wr;
 wire 		mem_op_wl;
-
+///
+wire        make_bd;
+assign make_bd =  (   inst_beq  
+                   || inst_bne  
+                   || inst_bgez 
+                   || inst_bgtz  
+                   || inst_blez 
+                   || inst_bltz 
+                   || inst_bltzal 
+                   || inst_bgezal 
+                   || inst_jal
+                   || inst_j
+                   || inst_jalr
+                   || inst_jr
+                  ) && ds_valid;
 assign br_stall = ds_ready_go;
-assign br_bus       = {br_stall,br_taken,br_target};
+assign br_bus       = {make_bd,br_stall,br_taken,br_target};
 
 assign ds_to_es_bus = { 
+                        ds_bd,          ,//232
                         cp0_dest        ,//231:224
                         inst_eret       ,//223
                         inst_mtc0       ,//222
@@ -487,6 +502,11 @@ assign div_sel[1:0] = {inst_div,inst_divu};
 assign mul_sel = inst_mult|inst_multu;  
 assign ds_hi = {32{inst_mult}}&signed_prod[63:32] | {32{inst_multu}}&unsigned_prod[63:32];
 assign ds_lo = {32{inst_mult}}&signed_prod[31:0] | {32{inst_multu}}&unsigned_prod[31:0];  
-///TODO: ds_bd
+
 reg     ds_bd;
+always @(posedge clk) begin
+    if(reset)   ds_bd <= 0;
+    else if(fs_to_ds_valid && ds_allowin)
+                ds_bd <= fs_to_ds_bus[70];
+end
 endmodule

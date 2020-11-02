@@ -148,6 +148,7 @@ assign {
 assign es_res_from_mem = es_load_op;
 assign es_result = {32{es_mfhi}}&hi | {32{es_mflo}}&lo | es_alu_result;
 assign es_to_ms_bus = { 
+                        es_bd,          ,//127
                         cp0_dest        ,//126:119
                         inst_eret       ,//118
                         inst_mtc0       ,//117
@@ -371,6 +372,11 @@ always @(posedge clk) begin
     end
     
 end
-///TODO: es_bd
+
 reg     es_bd;
+always @(posedge clk) begin
+    if(reset)   es_bd <= 0;
+    else if(ds_to_es_valid && es_allowin)
+                es_bd <= ds_to_es_bus[232];
+end
 endmodule

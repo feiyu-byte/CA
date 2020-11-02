@@ -1,11 +1,11 @@
 `ifndef MYCPU_H
     `define MYCPU_H
     ///to be changed!
-    `define BR_BUS_WD       34
-    `define FS_TO_DS_BUS_WD 70
-    `define DS_TO_ES_BUS_WD 232
-    `define ES_TO_MS_BUS_WD 127
-    `define MS_TO_WS_BUS_WD 112
+    `define BR_BUS_WD       35
+    `define FS_TO_DS_BUS_WD 71
+    `define DS_TO_ES_BUS_WD 233
+    `define ES_TO_MS_BUS_WD 128
+    `define MS_TO_WS_BUS_WD 113
     `define WS_TO_RF_BUS_WD 39
     `define FW_BUS_WD 38
     ///undefined!

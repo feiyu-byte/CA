@@ -129,6 +129,11 @@ assign debug_wb_pc       = ws_pc;
 assign debug_wb_rf_wen   = {4{rf_we}};
 assign debug_wb_rf_wnum  = ws_dest;
 assign debug_wb_rf_wdata = rf_wdata;
-///TODO: ws_bd
+
 reg     ws_bd;
+always @(posedge clk) begin
+    if(reset)   ws_bd <= 0;
+    else if(ms_to_ws_valid && ws_allowin)
+                ws_bd <= ms_to_ws_bus[112];
+end
 endmodule

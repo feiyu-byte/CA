@@ -94,7 +94,7 @@ end
 always @(posedge clk) begin
     if(reset)       cp0_cause_BD <= 1'b0;
     else if(ws_to_cp0_valid && !cp0_status_EXL)
-                    cp0_cause_BD <= 1'b1;
+                    cp0_cause_BD <= ws_bd;
 end
 //always @(posedge clk) begin
 //   *TI\IP* 
