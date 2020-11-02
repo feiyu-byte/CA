@@ -20,7 +20,7 @@ module wb_stage(
     output [31:0] debug_wb_rf_wdata,
     //to cp0
     output [`WS_TO_CP0_BUS_WD-1:0] ws_to_cp0_bus    ,
-    output                        ws_to_cp0_valid  
+    output                        ws_to_cp0_valid   ,
 );
 
 reg         ws_valid;

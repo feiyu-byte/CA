@@ -377,7 +377,7 @@ assign dst_is_rt    =     inst_addiu | inst_lui | inst_lw | inst_addi | inst_slt
 assign gr_we        =     ~inst_sw   & ~inst_beq  & ~inst_bne  & ~inst_jr   & ~inst_mult & ~inst_multu 
 						& ~inst_div  & ~inst_divu & ~inst_mthi & ~inst_mtlo & ~inst_bgez & ~inst_bgtz 
 						& ~inst_blez & ~inst_bltz & ~inst_j    & ~inst_sb   & ~inst_sh   & ~inst_swr 
-						& ~inst_swl;
+						& ~inst_swl  & ~inst_eret & ~inst_mtc0 & ~inst_syscall;
 
 assign mem_we       = inst_sw | inst_sb | inst_sh | inst_swr | inst_swl;
 assign load_op      = inst_lw | inst_lb | inst_lbu | inst_lh | inst_lhu | inst_lwr | inst_lwl;

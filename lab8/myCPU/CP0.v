@@ -9,8 +9,16 @@ module cp0 (
     output[`CP0_TO_DS_BUS_WD-1:0]   cp0_to_ds_bus,
     output[`CP0_TO_ES_BUS_WD-1:0]   cp0_to_es_bus,
     output[`CP0_TO_MS_BUS_WD-1:0]   cp0_to_ms_bus,
-    output[`CP0_TO_WS_BUS_WD-1:0]   cp0_to_ws_bus
+    output[`CP0_TO_WS_BUS_WD-1:0]   cp0_to_ws_bus,
+    //to ws, for mfc0
+    output[31:0]    cp0_rdata
 );
+assign cp0_rdata = 
+    {32{cp0_addr==`CR_STATUS}}  & cp0_status_rdata   |
+    {32{cp0_addr==`CR_CAUSE}}   & cp0_cause_rdata    |
+    {32{cp0_addr==`CR_EPC}}     & cp0_EPC 
+    ;
+
 wire        mtc0_we;
 wire [7:0]  cp0_addr;
 wire [31:0] cp0_wdata;
