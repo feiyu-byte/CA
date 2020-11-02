@@ -242,7 +242,16 @@ assign ds_to_es_bus = {
 //assign ds_ready_go    = (!es_to_ms_valid&&!ms_to_ws_valid&&!ws_to_rf_bus[38])?1:!block;
 
 /*ATTENTION:if add new instructions, remember to adapt the logic of ds_ready_go*/
-assign ds_ready_go    = (!(es_to_ms_bus[70]&out_es_valid&((rf_raddr1==es_addr&&rf_raddr1!=0)|(rf_raddr2==es_addr&&rf_raddr2!=0))))|inst_mflo|inst_mfhi;
+wire es_forward;
+wire ms_forward;
+wire ld_block;
+wire mfc0_block;
+assign mfc0_block     = es_to_ms_bus[116]&out_es_valid | ms_to_ws_bus[76]&out_ms_valid;
+assign ld_block       = es_to_ms_bus[70]&out_es_valid;
+assign es_forward     = ((rf_raddr1==es_addr&&rf_raddr1!=0)|(rf_raddr2==es_addr&&rf_raddr2!=0));
+assign ms_forward     = ((rf_raddr1==ms_addr&&rf_raddr1!=0)|(rf_raddr2==ms_addr&&rf_raddr2!=0));
+assign ds_ready_go    = ( !(ld_block& es_forward | mfc0_block & (es_forward|ms_forward) ) 
+                        )   |   inst_mflo   |   inst_mfhi;
 assign ds_allowin     = !ds_valid || ds_ready_go && es_allowin;
 assign ds_to_es_valid = ds_valid && ds_ready_go;
 always @(posedge clk) begin
