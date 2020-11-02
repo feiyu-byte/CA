@@ -18,7 +18,7 @@ module mem_stage(
     //from data-sram
     input  [31                 :0] data_sram_rdata,
     //from cp0
-    input  [31:0]   cp0_rdata
+    input  [`CP0_GENERAL_BUS_WD-1:0]cp0_general_bus
 );
 
 reg         ms_valid;
@@ -64,7 +64,7 @@ wire [5:0] padding_excp;
 reg ms_excp_valid;
 reg [6:2] ms_excp_execode;
 always @(posedge clk) begin
-    if(reset) begin
+    if(reset || cp0_status_EXL || !cp0_status_IE) begin
         ms_excp_valid   <=0;
         ms_excp_execode <=5'h00;
     end    
@@ -107,6 +107,16 @@ wire [7:0]  cp0_dest;
 wire        inst_eret;
 wire        inst_mfc0;
 wire        inst_mtc0;
+wire        eret_flush;
+wire        cp0_status_IM;
+wire        cp0_status_EXL;
+wire        cp0_status_IE;
+assign {
+        eret_flush,     //3
+        cp0_status_IM,  //2
+        cp0_status_EXL, //1
+        cp0_status_IE   //0
+} = cp0_general_bus;
 
 assign ms_to_ws_bus = { 
                         ms_rt_value     , //111:80
@@ -129,7 +139,7 @@ assign ms_ready_go    = 1'b1;
 assign ms_allowin     = !ms_valid || ms_ready_go && ws_allowin;
 assign ms_to_ws_valid = ms_valid && ms_ready_go;
 always @(posedge clk) begin
-    if (reset) begin
+    if (reset || eret_flush) begin
         ms_valid <= 1'b0;
     end
     else if (ms_allowin) begin
@@ -143,8 +153,9 @@ end
 assign mem_result = {32{ms_mem_op_h|ms_mem_op_hu|ms_mem_op_w|ms_mem_op_b|ms_mem_op_bu}}&ld_bhw_rdata |
                     {32{ms_mem_op_wr}}&ld_wr_rdata | {32{ms_mem_op_wl}}&ld_wl_rdata ;
 
-assign ms_final_result =    inst_mfc0       ? cp0_rdata :
-                            ms_res_from_mem ? mem_result
+assign ms_final_result =    ms_res_from_mem ? mem_result
                                          : ms_alu_result;
+///TODO: ms_bd
+reg     ms_bd;
 
 endmodule

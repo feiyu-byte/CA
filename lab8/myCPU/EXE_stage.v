@@ -15,6 +15,8 @@ module exe_stage(
     //forward
     output [`FW_BUS_WD       -1:0] es_to_ds_fw_bus,
     output                         out_es_valid,
+    //from cp0
+    input  [`CP0_GENERAL_BUS_WD-1:0]cp0_general_bus,
     // data sram interface
     output        data_sram_en   ,
     output [ 3:0] data_sram_wen  ,
@@ -120,7 +122,7 @@ wire        inst_mfc0;
 reg       es_excp_valid;
 reg [6:2] es_excp_execode;
 always @(posedge clk) begin
-    if(reset) begin
+    if(reset || cp0_status_EXL || !cp0_status_IE) begin
         es_excp_valid   <=0;
         es_excp_execode <=5'h00;
     end
@@ -132,6 +134,16 @@ always @(posedge clk) begin
     //    excp_valid<=0;
     //end
 end
+wire        eret_flush;
+wire        cp0_status_IM;
+wire        cp0_status_EXL;
+wire        cp0_status_IE;
+assign {
+        eret_flush,     //3
+        cp0_status_IM,  //2
+        cp0_status_EXL, //1
+        cp0_status_IE   //0
+} = cp0_general_bus;
 
 assign es_res_from_mem = es_load_op;
 assign es_result = {32{es_mfhi}}&hi | {32{es_mflo}}&lo | es_alu_result;
@@ -164,7 +176,7 @@ assign es_ready_go    = ~(es_div_sel[1]&~signed_dout_tvalid | es_div_sel[0]&~uns
 assign es_allowin     = !es_valid || es_ready_go && ms_allowin;
 assign es_to_ms_valid =  es_valid && es_ready_go;
 always @(posedge clk) begin
-    if (reset) begin
+    if (reset || eret_flush) begin
         es_valid <= 1'b0;
     end
     else if (es_allowin) begin
@@ -359,4 +371,6 @@ always @(posedge clk) begin
     end
     
 end
+///TODO: es_bd
+reg     es_bd;
 endmodule

@@ -21,6 +21,9 @@ module wb_stage(
     //to cp0
     output [`WS_TO_CP0_BUS_WD-1:0] ws_to_cp0_bus    ,
     output                        ws_to_cp0_valid   ,
+    //from cp0
+    input  [`CP0_GENERAL_BUS_WD-1:0]cp0_general_bus,
+    input  [31:0]                   cp0_rdata_bus
 );
 
 reg         ws_valid;
@@ -35,6 +38,17 @@ wire [5:0]  padding_excp;
 wire        inst_eret;
 wire        inst_mtc0;
 wire        inst_mfc0;
+
+wire        eret_flush;
+wire        cp0_status_IM;
+wire        cp0_status_EXL;
+wire        cp0_status_IE;
+assign {
+        eret_flush,     //3
+        cp0_status_IM,  //2
+        cp0_status_EXL, //1
+        cp0_status_IE   //0
+} = cp0_general_bus;
 
 assign out_ws_valid = ws_valid;
 assign {
@@ -54,7 +68,7 @@ assign {
 reg ws_excp_valid;
 reg [6:2] ws_excp_execode;
 always @(posedge clk) begin
-    if(reset) begin
+    if(reset || cp0_status_EXL || !cp0_status_IE) begin
         ws_excp_valid   <=0;
         ws_excp_execode <=5'h00;
     end    
@@ -64,8 +78,13 @@ always @(posedge clk) begin
     end
 end
 assign ws_to_cp0_valid = ws_excp_valid;
-assign ws_to_cp0_bus = { ws_excp_execode,
-                         ws_pc
+assign ws_to_cp0_bus={    
+            inst_eret,      //78
+            cp0_addr,       //77:70
+            cp0_wdata,      //69:38
+            ws_excp_execode,//37:33
+            ws_pc,          //32:1
+            ws_bd           //0
 };
 //handle mtc0 & mfc0, using block to solve cp0 hazard
 wire        mtc0_we;
@@ -89,7 +108,7 @@ assign ws_to_ds_fw_bus = {rf_we,   //37:37
 assign ws_ready_go = 1'b1;
 assign ws_allowin  = !ws_valid || ws_ready_go;
 always @(posedge clk) begin
-    if (reset) begin
+    if (reset || eret_flush) begin
         ws_valid <= 1'b0;
     end
     else if (ws_allowin) begin
@@ -103,20 +122,13 @@ end
 
 assign rf_we    = ws_gr_we&&ws_valid;
 assign rf_waddr = ws_dest;
-assign rf_wdata = ws_final_result;
+assign rf_wdata = inst_mfc0?ws_final_result:cp0_rdata_bus;
 
 // debug info generate
 assign debug_wb_pc       = ws_pc;
 assign debug_wb_rf_wen   = {4{rf_we}};
 assign debug_wb_rf_wnum  = ws_dest;
-assign debug_wb_rf_wdata = ws_final_result;
+assign debug_wb_rf_wdata = rf_wdata;
 ///TODO: ws_bd
 reg     ws_bd;
-assign ws_to_cp0_bus = {                            
-                        cp0_addr,       //77:70
-                        cp0_wdata,      //69:38
-                        ws_excp_execode,//37:33
-                        ws_pc,          //32:1
-                        ws_bd           //0
-};
 endmodule

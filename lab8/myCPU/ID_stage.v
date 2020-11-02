@@ -26,6 +26,8 @@ module id_stage(
     output [`DS_TO_ES_BUS_WD -1:0] ds_to_es_bus  ,
     //to fs
     output [`BR_BUS_WD       -1:0] br_bus        ,
+    //from cp0
+    input  [`CP0_GENERAL_BUS_WD-1:0]cp0_general_bus,
     //to rf: for write back
     input  [`WS_TO_RF_BUS_WD -1:0] ws_to_rf_bus
 );
@@ -40,11 +42,11 @@ assign fs_pc = fs_to_ds_bus[31:0];
 //exception tag: add here
 wire [5:0]  padding_excp;
 wire [7:0]  cp0_dest;
-assign cp0_dest = {rd,sel};
+assign cp0_dest = {sel,rd};
 reg ds_excp_valid;
 reg [6:2] ds_excp_execode;
 always @(posedge clk) begin
-    if(reset) begin
+    if(reset || cp0_status_EXL || !cp0_status_IE) begin
         ds_excp_valid   <=0;
         ds_excp_execode <=5'h00;
     end    
@@ -57,6 +59,16 @@ always @(posedge clk) begin
         ds_excp_execode <=5'h08;
     end
 end
+wire        eret_flush;
+wire        cp0_status_IM;
+wire        cp0_status_EXL;
+wire        cp0_status_IE;
+assign {
+        eret_flush,     //3
+        cp0_status_IM,  //2
+        cp0_status_EXL, //1
+        cp0_status_IE   //0
+} = cp0_general_bus;
 
 wire [31:0] ds_inst;
 wire [31:0] ds_pc  ;
@@ -261,7 +273,7 @@ always @(posedge clk) begin
 end
 
 always @(posedge clk) begin
-    if (reset) begin
+    if (reset || eret_flush) begin
         ds_valid <= 1'b0;
     end
     else if (ds_allowin) begin
@@ -381,7 +393,7 @@ assign dst_is_r31   = inst_jal   | inst_bgezal | inst_bltzal;
 
 assign dst_is_rt    =     inst_addiu | inst_lui | inst_lw | inst_addi | inst_slti | inst_sltiu 
 						| inst_andi  | inst_ori | inst_xori | inst_lb | inst_lbu  | inst_lh 
-						| inst_lhu   | inst_lwr | inst_lwl;
+						| inst_lhu   | inst_lwr | inst_lwl  | inst_mfc0;
 
 assign gr_we        =     ~inst_sw   & ~inst_beq  & ~inst_bne  & ~inst_jr   & ~inst_mult & ~inst_multu 
 						& ~inst_div  & ~inst_divu & ~inst_mthi & ~inst_mtlo & ~inst_bgez & ~inst_bgtz 
@@ -474,5 +486,7 @@ assign signed_prod = $signed(src1) * $signed(src2);
 assign div_sel[1:0] = {inst_div,inst_divu};
 assign mul_sel = inst_mult|inst_multu;  
 assign ds_hi = {32{inst_mult}}&signed_prod[63:32] | {32{inst_multu}}&unsigned_prod[63:32];
-assign ds_lo = {32{inst_mult}}&signed_prod[31:0] | {32{inst_multu}}&unsigned_prod[31:0];                                 
+assign ds_lo = {32{inst_mult}}&signed_prod[31:0] | {32{inst_multu}}&unsigned_prod[31:0];  
+///TODO: ds_bd
+reg     ds_bd;
 endmodule

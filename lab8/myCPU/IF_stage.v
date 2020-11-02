@@ -10,6 +10,9 @@ module if_stage(
     //to ds
     output                         fs_to_ds_valid ,
     output [`FS_TO_DS_BUS_WD -1:0] fs_to_ds_bus   ,
+    //from cp0
+    input  [`CP0_GENERAL_BUS_WD-1:0]    cp0_general_bus,
+    input  [31:0]                       cp0_EPC_bus,
     // inst sram interface
     output        inst_sram_en   ,
     output [ 3:0] inst_sram_wen  ,
@@ -35,7 +38,7 @@ assign {br_stall,br_taken,br_target} = br_bus;
 reg       fs_excp_valid;
 reg [6:2] fs_excp_execode;
 always @(posedge clk) begin
-    if(reset) begin
+    if(reset || cp0_status_EXL || !cp0_status_IE) begin
         fs_excp_valid   <=0;
         fs_excp_execode <=5'h00;
     end
@@ -43,6 +46,7 @@ always @(posedge clk) begin
     //    excp_valid<=0;
     //end
 end
+
 
 wire [31:0] fs_inst;
 reg  [31:0] fs_pc;
@@ -61,7 +65,7 @@ assign fs_ready_go    = 1'b1;
 assign fs_allowin     = !fs_valid || fs_ready_go && ds_allowin;
 assign fs_to_ds_valid =  fs_valid && fs_ready_go;
 always @(posedge clk) begin
-    if (reset) begin
+    if (reset || eret_flush) begin
         fs_valid <= 1'b0;
     end
     else if (fs_allowin) begin
@@ -70,6 +74,12 @@ always @(posedge clk) begin
 
     if (reset) begin
         fs_pc <= 32'hbfbffffc;  //trick: to make nextpc be 0xbfc00000 during reset 
+    end
+    else if(jump_to_exception_entry) begin
+        fs_pc <= 32'hbfc0037c;  //0xbfc00380
+    end
+    else if(eret_flush) begin
+        fs_pc <= cp0_EPC_bus;
     end
     else if (to_fs_valid && fs_allowin) begin
         fs_pc <= nextpc;
@@ -82,5 +92,6 @@ assign inst_sram_addr  = nextpc;
 assign inst_sram_wdata = 32'b0;
 
 assign fs_inst         = inst_sram_rdata;
-
+///TODO: fs_bd
+reg     fs_bd;
 endmodule
