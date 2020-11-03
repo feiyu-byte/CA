@@ -34,6 +34,7 @@ wire         ws_to_cp0_valid;
 wire         out_es_valid;
 wire         out_ms_valid;
 wire         out_ws_valid;
+wire         go_excp_entry;
 wire [`FS_TO_DS_BUS_WD -1:0] fs_to_ds_bus;
 wire [`DS_TO_ES_BUS_WD -1:0] ds_to_es_bus;
 wire [`ES_TO_MS_BUS_WD -1:0] es_to_ms_bus;
@@ -61,6 +62,7 @@ if_stage if_stage(
     //from cp0
     .cp0_general_bus(cp0_general_bus),
     .cp0_EPC_bus    (cp0_EPC_bus)   ,
+    .go_excp_entry  (go_excp_entry) ,
     // inst sram interface
     .inst_sram_en   (inst_sram_en   ),
     .inst_sram_wen  (inst_sram_wen  ),
@@ -169,7 +171,9 @@ wb_stage wb_stage(
     .cp0_rdata_bus  (cp0_rdata_bus      ),
     //to cp0
     .ws_to_cp0_bus    (ws_to_cp0_bus    ),
-    .ws_to_cp0_valid  (ws_to_cp0_valid  )
+    .ws_to_cp0_valid  (ws_to_cp0_valid  ),
+    //to IF
+    .go_excp_entry    (go_excp_entry)
 );
 // CP0
 cp0 cp0(

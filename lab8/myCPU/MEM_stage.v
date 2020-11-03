@@ -119,7 +119,7 @@ assign {
 } = cp0_general_bus;
 
 assign ms_to_ws_bus = { 
-                        ms_bd,          , //112
+                        ms_bd           , //112
                         ms_rt_value     , //111:80
                         cp0_dest        , //86:79
                         inst_eret       , //78

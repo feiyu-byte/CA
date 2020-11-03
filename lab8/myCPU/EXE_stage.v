@@ -55,7 +55,9 @@ wire es_mem_op_bu         ;
 wire es_mem_op_b          ;
 wire es_mem_op_hu         ;
 wire es_mem_op_h          ;
-
+wire        inst_eret;
+wire        inst_mtc0;
+wire        inst_mfc0;
 assign out_es_valid = es_valid;
 assign {
         cp0_dest        ,//231:224
@@ -116,9 +118,7 @@ wire [3:0]  swr_wen       ;
 //exception tag: add here
 wire [5:0]  padding_excp;
 wire [7:0]  cp0_dest;
-wire        inst_eret;
-wire        inst_mtc0;
-wire        inst_mfc0;
+
 reg       es_excp_valid;
 reg [6:2] es_excp_execode;
 always @(posedge clk) begin
@@ -134,10 +134,17 @@ always @(posedge clk) begin
     //    excp_valid<=0;
     //end
 end
+reg    		es_bd;
 wire        eret_flush;
 wire        cp0_status_IM;
 wire        cp0_status_EXL;
 wire        cp0_status_IE;
+always @(posedge clk) begin
+    if(reset)  
+    	es_bd <= 0;
+    else if(ds_to_es_valid && es_allowin)
+        es_bd <= ds_to_es_bus[232];
+end
 assign {
         eret_flush,     //3
         cp0_status_IM,  //2
@@ -148,7 +155,7 @@ assign {
 assign es_res_from_mem = es_load_op;
 assign es_result = {32{es_mfhi}}&hi | {32{es_mflo}}&lo | es_alu_result;
 assign es_to_ms_bus = { 
-                        es_bd,          ,//127
+                        es_bd           ,//127
                         cp0_dest        ,//126:119
                         inst_eret       ,//118
                         inst_mtc0       ,//117
@@ -245,6 +252,7 @@ wire [31:0] unsigned_quotient,unsigned_remainder;
 wire hi_we,lo_we;
 wire [31:0] hi_wdata,lo_wdata;
 reg div_en;
+
 always @(posedge clk ) begin
   if (reset) begin
     // reset
@@ -373,10 +381,6 @@ always @(posedge clk) begin
     
 end
 
-reg     es_bd;
-always @(posedge clk) begin
-    if(reset)   es_bd <= 0;
-    else if(ds_to_es_valid && es_allowin)
-                es_bd <= ds_to_es_bus[232];
-end
+
+
 endmodule

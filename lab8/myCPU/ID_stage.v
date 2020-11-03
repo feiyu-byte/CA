@@ -226,7 +226,7 @@ assign br_stall = ds_ready_go;
 assign br_bus       = {make_bd,br_stall,br_taken,br_target};
 
 assign ds_to_es_bus = { 
-                        ds_bd,          ,//232
+                        ds_bd          ,//232
                         cp0_dest        ,//231:224
                         inst_eret       ,//223
                         inst_mtc0       ,//222

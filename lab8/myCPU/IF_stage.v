@@ -13,6 +13,7 @@ module if_stage(
     //from cp0
     input  [`CP0_GENERAL_BUS_WD-1:0]    cp0_general_bus,
     input  [31:0]                       cp0_EPC_bus,
+    input                               go_excp_entry,
     // inst sram interface
     output        inst_sram_en   ,
     output [ 3:0] inst_sram_wen  ,
@@ -47,7 +48,16 @@ always @(posedge clk) begin
     //    excp_valid<=0;
     //end
 end
-
+wire        eret_flush;
+wire        cp0_status_IM;
+wire        cp0_status_EXL;
+wire        cp0_status_IE;
+assign {
+        eret_flush,     //3
+        cp0_status_IM,  //2
+        cp0_status_EXL, //1
+        cp0_status_IE   //0
+} = cp0_general_bus;
 
 wire [31:0] fs_inst;
 reg  [31:0] fs_pc;
@@ -77,7 +87,7 @@ always @(posedge clk) begin
     if (reset) begin
         fs_pc <= 32'hbfbffffc;  //trick: to make nextpc be 0xbfc00000 during reset 
     end
-    else if(jump_to_exception_entry) begin
+    else if(go_excp_entry) begin
         fs_pc <= 32'hbfc0037c;  //0xbfc00380
     end
     else if(eret_flush) begin
