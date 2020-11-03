@@ -37,24 +37,23 @@ wire         br_stall;
 assign {make_bd,br_stall,br_taken,br_target} = br_bus;
 
 //exception tag: add here
-reg       fs_excp_valid;
-reg [6:2] fs_excp_execode;
-always @(posedge clk) begin
-    if(reset || cp0_status_EXL || !cp0_status_IE) begin
-        fs_excp_valid   <=0;
-        fs_excp_execode <=5'h00;
-    end
-    //else if(0) begin
-    //    excp_valid<=0;
-    //end
-end
+wire       fs_excp_valid;
+wire [6:2] fs_excp_execode;
+//exception cause: add here
+assign fs_excp_valid = 
+                  (reset || cp0_status_EXL)     ? 1'h0   :
+                  1'h0;
+assign fs_excp_execode = 
+                  (reset || cp0_status_EXL) ? 5'h00             :
+                  5'h00;
+
 wire        eret_flush;
-wire        cp0_status_IM;
+wire [7:0]  cp0_status_IM;
 wire        cp0_status_EXL;
 wire        cp0_status_IE;
 assign {
-        eret_flush,     //3
-        cp0_status_IM,  //2
+        eret_flush,     //10
+        cp0_status_IM,  //9:2
         cp0_status_EXL, //1
         cp0_status_IE   //0
 } = cp0_general_bus;
@@ -105,10 +104,8 @@ assign inst_sram_wdata = 32'b0;
 
 assign fs_inst         = inst_sram_rdata;
 
-reg     fs_bd;
-always @(posedge clk) begin
-    if(reset)   fs_bd <= 0;
-    else if(make_bd)
-                fs_bd <= 1;
-end
+wire     fs_bd;
+assign fs_bd = (reset)  ?   1'b0:
+               (make_bd)?   1'b1:
+               1'b0;
 endmodule

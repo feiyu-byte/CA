@@ -40,40 +40,43 @@ reg  [`FS_TO_DS_BUS_WD -1:0] fs_to_ds_bus_r;
 assign fs_pc = fs_to_ds_bus[31:0];
 
 //exception tag: add here
-wire [5:0]  padding_excp;
 wire [7:0]  cp0_dest;
+wire       ds_excp_valid;
+wire [6:2] ds_excp_execode;
 assign cp0_dest = {sel,rd};
-reg ds_excp_valid;
-reg [6:2] ds_excp_execode;
-always @(posedge clk) begin
-    if(reset || cp0_status_EXL || !cp0_status_IE) begin
-        ds_excp_valid   <=0;
-        ds_excp_execode <=5'h00;
-    end    
-    else if(fs_to_ds_valid&&fs_to_ds_bus[69]) begin
-        ds_excp_valid   <=1;
-        ds_excp_execode <=fs_to_ds_bus[68:64];
-    end
-    else if(inst_syscall) begin
-        ds_excp_valid   <=1;
-        ds_excp_execode <=5'h08;
-    end
-end
+
+assign ds_excp_valid = 
+                  (reset || cp0_status_EXL)     ? 1'h0   :
+                  (fs_excp_valid||inst_syscall) ? 1'h1   :
+                  1'h0;
+assign ds_excp_execode = 
+                  (reset || cp0_status_EXL) ? 5'h00             :
+                  (fs_excp_valid)           ? fs_excp_execode   :
+                  (inst_syscall)            ? 5'h08             :
+                  5'h00;
+
 wire        eret_flush;
-wire        cp0_status_IM;
+wire [7:0]  cp0_status_IM;
 wire        cp0_status_EXL;
 wire        cp0_status_IE;
 assign {
-        eret_flush,     //3
-        cp0_status_IM,  //2
+        eret_flush,     //10
+        cp0_status_IM,  //9:2
         cp0_status_EXL, //1
         cp0_status_IE   //0
 } = cp0_general_bus;
 
+wire        fs_bd;
+wire        fs_excp_valid;
+wire [4:0]  fs_excp_execode;
+wire        ds_excp_valid;
+wire [4:0]  ds_excp_execode;
 wire [31:0] ds_inst;
 wire [31:0] ds_pc  ;
 assign {
-        padding_excp    ,//69:64
+        fs_bd,          //70
+        fs_excp_valid,  //69
+        fs_excp_execode,//68:64
         ds_inst,
         ds_pc  } = fs_to_ds_bus_r;
 
@@ -288,7 +291,7 @@ always @(posedge clk) begin
 end
 
 always @(posedge clk) begin
-    if (reset || eret_flush) begin
+    if (reset || eret_flush ) begin
         ds_valid <= 1'b0;
     end
     else if (ds_allowin) begin
@@ -503,10 +506,6 @@ assign mul_sel = inst_mult|inst_multu;
 assign ds_hi = {32{inst_mult}}&signed_prod[63:32] | {32{inst_multu}}&unsigned_prod[63:32];
 assign ds_lo = {32{inst_mult}}&signed_prod[31:0] | {32{inst_multu}}&unsigned_prod[31:0];  
 
-reg     ds_bd;
-always @(posedge clk) begin
-    if(reset)   ds_bd <= 0;
-    else if(fs_to_ds_valid && ds_allowin)
-                ds_bd <= fs_to_ds_bus[70];
-end
+wire ds_bd;
+assign ds_bd = (reset)  ?   1'b0:fs_bd;
 endmodule

@@ -9,7 +9,7 @@
     `define WS_TO_RF_BUS_WD 39
     `define FW_BUS_WD 38
     ///undefined!
-    `define CP0_GENERAL_BUS_WD  4
+    `define CP0_GENERAL_BUS_WD  11
     `define WS_TO_CP0_BUS_WD    79
     ///define ALL cp0 reg addr in [rd\sel]
     //0<<3+12

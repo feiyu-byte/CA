@@ -55,16 +55,21 @@ wire es_mem_op_bu         ;
 wire es_mem_op_b          ;
 wire es_mem_op_hu         ;
 wire es_mem_op_h          ;
+wire        ds_bd;
+wire        ds_excp_valid;
+wire [4:0]  ds_excp_execode;
 wire        inst_eret;
 wire        inst_mtc0;
 wire        inst_mfc0;
 assign out_es_valid = es_valid;
 assign {
+        ds_bd          ,//232
         cp0_dest        ,//231:224
         inst_eret       ,//223
         inst_mtc0       ,//222
         inst_mfc0       ,//221
-        padding_excp    ,//220:215
+        ds_excp_valid   ,//220
+        ds_excp_execode ,//219:215
         es_mem_op_wl    ,//214
         es_mem_op_wr    ,//213
         es_mem_op_w     ,//212
@@ -116,38 +121,28 @@ wire [3:0]  swl_wen       ;
 wire [3:0]  swr_wen       ;
 
 //exception tag: add here
-wire [5:0]  padding_excp;
 wire [7:0]  cp0_dest;
+wire       es_excp_valid;
+wire [6:2] es_excp_execode;
+assign es_excp_valid = 
+                  (reset || cp0_status_EXL)     ? 1'h0   :
+                  (ds_excp_valid)               ? 1'h1   :
+                  1'h0;
+assign es_excp_execode = 
+                  (reset || cp0_status_EXL) ? 5'h00             :
+                  (ds_excp_valid)           ? ds_excp_execode   :
+                  5'h00;
 
-reg       es_excp_valid;
-reg [6:2] es_excp_execode;
-always @(posedge clk) begin
-    if(reset || cp0_status_EXL || !cp0_status_IE) begin
-        es_excp_valid   <=0;
-        es_excp_execode <=5'h00;
-    end
-    else if(ds_to_es_valid&&ds_to_es_bus[220]) begin
-        es_excp_valid   <=1;
-        es_excp_execode <=ds_to_es_bus[219:215];
-    end
-    //else if(0) begin
-    //    excp_valid<=0;
-    //end
-end
-reg    		es_bd;
+//assign es_excp_valid = !(reset || cp0_status_EXL) && (ds_to_es_valid && es_allowin) && ds_excp_valid;
+//assign es_excp_execode = {5{ds_to_es_valid && es_allowin}} & ds_excp_execode |
+//                         {5{0}} & 5'b0;
 wire        eret_flush;
-wire        cp0_status_IM;
+wire [7:0]  cp0_status_IM;
 wire        cp0_status_EXL;
 wire        cp0_status_IE;
-always @(posedge clk) begin
-    if(reset)  
-    	es_bd <= 0;
-    else if(ds_to_es_valid && es_allowin)
-        es_bd <= ds_to_es_bus[232];
-end
 assign {
-        eret_flush,     //3
-        cp0_status_IM,  //2
+        eret_flush,     //10
+        cp0_status_IM,  //9:2
         cp0_status_EXL, //1
         cp0_status_IE   //0
 } = cp0_general_bus;
@@ -184,7 +179,7 @@ assign es_ready_go    = ~(es_div_sel[1]&~signed_dout_tvalid | es_div_sel[0]&~uns
 assign es_allowin     = !es_valid || es_ready_go && ms_allowin;
 assign es_to_ms_valid =  es_valid && es_ready_go;
 always @(posedge clk) begin
-    if (reset || eret_flush) begin
+    if (reset || eret_flush || es_excp_valid) begin
         es_valid <= 1'b0;
     end
     else if (es_allowin) begin
@@ -346,6 +341,8 @@ HI_LO u_HI_LO(
 	.hi(hi),
 	.lo(lo)
 	);
+wire es_bd;
+assign es_bd = (reset)  ?   1'b0:ds_bd;
 endmodule
 
 
@@ -380,7 +377,4 @@ always @(posedge clk) begin
     end
     
 end
-
-
-
 endmodule

@@ -37,7 +37,6 @@ wire [ 4:0] ws_dest;
 wire [31:0] ws_final_result;
 wire [31:0] ws_pc;
 wire [31:0] ws_rt_value;
-wire [5:0]  padding_excp;
 wire        inst_eret;
 wire        inst_mtc0;
 wire        inst_mfc0;
@@ -47,20 +46,24 @@ wire        cp0_status_IM;
 wire        cp0_status_EXL;
 wire        cp0_status_IE;
 assign {
-        eret_flush,     //3
-        cp0_status_IM,  //2
+        eret_flush,     //10
+        cp0_status_IM,  //9:2
         cp0_status_EXL, //1
         cp0_status_IE   //0
 } = cp0_general_bus;
-
+wire        ms_bd;
+wire        ms_excp_valid;
+wire [4:0]  ms_excp_execode;
 assign out_ws_valid = ws_valid;
 assign {
+        ms_bd           , //112
         ws_rt_value     , //111:80
         cp0_addr        , //86:79
         inst_eret       , //78
         inst_mtc0       , //77
         inst_mfc0       , //76
-        padding_excp    , //75:70
+        ms_excp_valid  ,  //75
+        ms_excp_execode,  //74:70
         ws_gr_we       ,  //69:69
         ws_dest        ,  //68:64
         ws_final_result,  //63:32
@@ -68,21 +71,22 @@ assign {
        } = ms_to_ws_bus_r;
 
 //exception tag: add here
-reg ws_excp_valid;
-reg [6:2] ws_excp_execode;
-always @(posedge clk) begin
-    if(reset || cp0_status_EXL || !cp0_status_IE) begin
-        ws_excp_valid   <=0;
-        ws_excp_execode <=5'h00;
-    end    
-    else if(ms_to_ws_valid&&ms_to_ws_bus[75]) begin
-        ws_excp_valid   <=1;
-        ws_excp_execode <=ms_to_ws_bus[74:70];
-    end
-end
+wire       ws_excp_valid;
+wire [6:2] ws_excp_execode;
+assign ws_excp_valid = 
+                  (reset || cp0_status_EXL)     ? 1'h0   :
+                  (ms_excp_valid)               ? 1'h1   :
+                  1'h0;
+assign ws_excp_execode = 
+                  (reset || cp0_status_EXL) ? 5'h00             :
+                  (ms_excp_valid)           ? ms_excp_execode   :
+                  5'h00;
+wire to_cp0_eret;
+assign to_cp0_eret = inst_eret || ws_excp_valid;
+
 assign ws_to_cp0_valid = ws_excp_valid;
 assign ws_to_cp0_bus={    
-            inst_eret,      //78
+            to_cp0_eret,    //78
             cp0_addr,       //77:70
             cp0_wdata,      //69:38
             ws_excp_execode,//37:33
@@ -111,7 +115,7 @@ assign ws_to_ds_fw_bus = {rf_we,   //37:37
 assign ws_ready_go = 1'b1;
 assign ws_allowin  = !ws_valid || ws_ready_go;
 always @(posedge clk) begin
-    if (reset || eret_flush) begin
+    if (reset || eret_flush || ws_excp_valid) begin
         ws_valid <= 1'b0;
     end
     else if (ws_allowin) begin
@@ -133,12 +137,8 @@ assign debug_wb_rf_wen   = {4{rf_we}};
 assign debug_wb_rf_wnum  = ws_dest;
 assign debug_wb_rf_wdata = rf_wdata;
 
-reg     ws_bd;
-always @(posedge clk) begin
-    if(reset)   ws_bd <= 0;
-    else if(ms_to_ws_valid && ws_allowin)
-                ws_bd <= ms_to_ws_bus[112];
-end
+wire ws_bd;
+assign ws_bd = (reset)  ?   1'b0:ms_bd;
 endmodule
 
 //----------------------------------------------------------------------------------------------------------
@@ -156,13 +156,14 @@ module cp0 (
     output[31:0]                    cp0_EPC_bus
 );
 assign cp0_general_bus ={
-                        eret_flush,     //3
-                        cp0_status_IM,  //2
+                        eret_flush,     //10
+                        cp0_status_IM,  //9:2
                         cp0_status_EXL, //1
                         cp0_status_IE   //0
 };
 assign cp0_EPC_bus   = cp0_EPC;
 assign cp0_rdata_bus = cp0_rdata;
+wire [31:0] cp0_rdata;
 assign cp0_rdata = 
     {32{cp0_addr==`CR_STATUS}}  & cp0_status_rdata   |
     {32{cp0_addr==`CR_CAUSE}}   & cp0_cause_rdata    |
@@ -219,8 +220,9 @@ always @(posedge clk) begin
     end
 end
 always @(posedge clk) begin
-    if(mtc0_we && cp0_addr==`CR_STATUS)
-        cp0_status_IM <= cp0_wdata[15:8];
+    if(reset)   cp0_status_IM <= 8'b0;
+    else if(mtc0_we && cp0_addr==`CR_STATUS)
+                cp0_status_IM <= cp0_wdata[15:8];
 end
 always @(posedge clk) begin
     if(reset)   cp0_status_EXL <= 1'b0;
@@ -241,9 +243,14 @@ always @(posedge clk) begin
     else if(ws_to_cp0_valid && !cp0_status_EXL)
                     cp0_cause_BD <= ws_bd;
 end
-//always @(posedge clk) begin
-//   *TI\IP* 
-//end
+always @(posedge clk) begin
+    if(reset)       cp0_cause_TI <= 1'b0;
+    ///to be added
+end
+always @(posedge clk) begin
+    if(reset)       cp0_cause_IP <= 8'b0;
+    ///to be added
+end
 always @(posedge clk) begin
     if(reset)       cp0_cause_execode <= 5'b0;
     else if(ws_to_cp0_valid)

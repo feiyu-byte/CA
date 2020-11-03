@@ -60,31 +60,29 @@ assign addr_offset2   =(ms_alu_result[1:0] == 2'b10);
 assign addr_offset3   =(ms_alu_result[1:0] == 2'b11);
 
 //exception tag: add here
-wire [5:0] padding_excp;
-reg ms_excp_valid;
-reg [6:2] ms_excp_execode;
-always @(posedge clk) begin
-    if(reset || cp0_status_EXL || !cp0_status_IE) begin
-        ms_excp_valid   <=0;
-        ms_excp_execode <=5'h00;
-    end    
-    else if(es_to_ms_valid&&es_to_ms_bus[115]) begin
-        ms_excp_valid   <=1;
-        ms_excp_execode <=es_to_ms_bus[114:110];
-    end
-    //else if(?) begin
-    //    ms_excp_valid   <=1;
-    //    ms_excp_execode <=5'h??;
-    //end
-end
+wire ms_excp_valid;
+wire [6:2] ms_excp_execode;
+assign ms_excp_valid = 
+                  (reset || cp0_status_EXL)     ? 1'h0   :
+                  (es_excp_valid)               ? 1'h1   :
+                  1'h0;
+assign ms_excp_execode = 
+                  (reset || cp0_status_EXL) ? 5'h00             :
+                  (es_excp_valid)           ? es_excp_execode   :
+                  5'h00;
 
+wire       es_bd;
+wire       es_excp_valid;
+wire [4:0] es_excp_execode;
 assign out_ms_valid = ms_valid;
 assign {
+        es_bd           ,//127
         cp0_dest        ,//126:119
         inst_eret       ,//118
         inst_mtc0       ,//117
         inst_mfc0       ,//116
-        padding_excp    ,//115:110
+        es_excp_valid   ,//115
+        es_excp_execode ,//114:110
         ms_rt_value     ,//109:78
         ms_mem_op_wl    ,//77
         ms_mem_op_wr    ,//76
@@ -108,12 +106,12 @@ wire        inst_eret;
 wire        inst_mfc0;
 wire        inst_mtc0;
 wire        eret_flush;
-wire        cp0_status_IM;
+wire [7:0]  cp0_status_IM;
 wire        cp0_status_EXL;
 wire        cp0_status_IE;
 assign {
-        eret_flush,     //3
-        cp0_status_IM,  //2
+        eret_flush,     //10
+        cp0_status_IM,  //9:2
         cp0_status_EXL, //1
         cp0_status_IE   //0
 } = cp0_general_bus;
@@ -140,7 +138,7 @@ assign ms_ready_go    = 1'b1;
 assign ms_allowin     = !ms_valid || ms_ready_go && ws_allowin;
 assign ms_to_ws_valid = ms_valid && ms_ready_go;
 always @(posedge clk) begin
-    if (reset || eret_flush) begin
+    if (reset || eret_flush  || ms_excp_valid) begin
         ms_valid <= 1'b0;
     end
     else if (ms_allowin) begin
@@ -157,10 +155,6 @@ assign mem_result = {32{ms_mem_op_h|ms_mem_op_hu|ms_mem_op_w|ms_mem_op_b|ms_mem_
 assign ms_final_result =    ms_res_from_mem ? mem_result
                                          : ms_alu_result;
 
-reg     ms_bd;
-always @(posedge clk) begin
-    if(reset)   ms_bd <= 0;
-    else if(es_to_ms_valid && ms_allowin)
-                ms_bd <= es_to_ms_bus[127];
-end
+wire ms_bd;
+assign ms_bd = (reset)  ?   1'b0:ms_bd;
 endmodule
