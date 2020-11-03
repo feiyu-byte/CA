@@ -6,6 +6,7 @@ module exe_stage(
     //allowin
     input                          ms_allowin    ,
     output                         es_allowin    ,
+    output                         es_excp_valid ,
     //from ds
     input                          ds_to_es_valid,
     input  [`DS_TO_ES_BUS_WD -1:0] ds_to_es_bus  ,
@@ -179,7 +180,7 @@ assign es_ready_go    = ~(es_div_sel[1]&~signed_dout_tvalid | es_div_sel[0]&~uns
 assign es_allowin     = !es_valid || es_ready_go && ms_allowin;
 assign es_to_ms_valid =  es_valid && es_ready_go;
 always @(posedge clk) begin
-    if (reset || eret_flush || es_excp_valid) begin
+    if (reset || eret_flush ) begin
         es_valid <= 1'b0;
     end
     else if (es_allowin) begin

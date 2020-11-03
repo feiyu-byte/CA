@@ -35,6 +35,9 @@ wire         out_es_valid;
 wire         out_ms_valid;
 wire         out_ws_valid;
 wire         go_excp_entry;
+wire         es_excp_valid;
+wire         ms_excp_valid;
+wire         ws_excp_valid;
 wire [`FS_TO_DS_BUS_WD -1:0] fs_to_ds_bus;
 wire [`DS_TO_ES_BUS_WD -1:0] ds_to_es_bus;
 wire [`ES_TO_MS_BUS_WD -1:0] es_to_ms_bus;
@@ -74,6 +77,10 @@ if_stage if_stage(
 id_stage id_stage(
     .clk            (clk            ),
     .reset          (reset          ),
+    //exception
+    .es_excp_valid  (es_excp_valid  ),
+    .ms_excp_valid  (ms_excp_valid  ),
+    .ws_excp_valid  (ws_excp_valid  ),
     //allowin
     .es_allowin     (es_allowin     ),
     .ds_allowin     (ds_allowin     ),
@@ -109,6 +116,7 @@ exe_stage exe_stage(
     //allowin
     .ms_allowin     (ms_allowin     ),
     .es_allowin     (es_allowin     ),
+    .es_excp_valid  (es_excp_valid  ),
     //from ds
     .ds_to_es_valid (ds_to_es_valid ),
     .ds_to_es_bus   (ds_to_es_bus   ),
@@ -133,6 +141,7 @@ mem_stage mem_stage(
     //allowin
     .ws_allowin     (ws_allowin     ),
     .ms_allowin     (ms_allowin     ),
+    .ms_excp_valid  (ms_excp_valid  ),
     //from es
     .es_to_ms_valid (es_to_ms_valid ),
     .es_to_ms_bus   (es_to_ms_bus   ),
@@ -153,6 +162,7 @@ wb_stage wb_stage(
     .reset          (reset          ),
     //allowin
     .ws_allowin     (ws_allowin     ),
+    .ws_excp_valid  (ws_excp_valid  ),
     //from ms
     .ms_to_ws_valid (ms_to_ws_valid ),
     .ms_to_ws_bus   (ms_to_ws_bus   ),

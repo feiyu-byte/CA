@@ -6,6 +6,7 @@ module mem_stage(
     //allowin
     input                          ws_allowin    ,
     output                         ms_allowin    ,
+    output                         ms_excp_valid ,
     //from es
     input                          es_to_ms_valid,
     input  [`ES_TO_MS_BUS_WD -1:0] es_to_ms_bus  ,
@@ -138,7 +139,7 @@ assign ms_ready_go    = 1'b1;
 assign ms_allowin     = !ms_valid || ms_ready_go && ws_allowin;
 assign ms_to_ws_valid = ms_valid && ms_ready_go;
 always @(posedge clk) begin
-    if (reset || eret_flush  || ms_excp_valid) begin
+    if (reset || eret_flush) begin
         ms_valid <= 1'b0;
     end
     else if (ms_allowin) begin
