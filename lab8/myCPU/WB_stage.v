@@ -265,12 +265,4 @@ always @(posedge clk) begin
     else if(mtc0_we && cp0_addr==`CR_EPC)
         cp0_EPC <= cp0_wdata;
 end
-//0.check status(IE=1 && EXL=0)
-//2.feedback to all stages to clear them (xs_valid=0)
-//3.fs_pc = 32'hbfc00380
-//ps: MFC0 & MTC0 & ERET to be implemented
-//pps: ws_to_cp0_valid has been updated at the start of WS. maybe ONE cycle to process exception is enough.
-//ppps: bus from cp0 to xs(x=f\d\e\m\w) to be added
-
-//TODO: xs_bd: in branch delay slot for fs\ds\es\ms\ws
 endmodule
