@@ -59,12 +59,13 @@ assign ds_excp_valid =
                   (reset || cp0_status_EXL)     ? 1'h0   :
                   (fs_excp_valid)               ? 1'h1   :
                   (cp0_status_IM & cp0_cause_IP)? 1'h1   :
-                  (inst_syscall||reserved_inst) ? 1'h1:1'h0;
+                  (inst_syscall||inst_break||reserved_inst) ? 1'h1:1'h0;
 assign ds_excp_execode = 
                   (reset || cp0_status_EXL)     ? 5'h00             :
                   (fs_excp_valid)               ? fs_excp_execode   :
                   (cp0_status_IM & cp0_cause_IP)? 5'h00             :
                   (inst_syscall)                ? 5'h08             :
+                  (inst_break)                  ? 5'h09             :
                   (reserved_inst)               ? 5'h0a             :
                   5'h00;
 assign ds_excp_bvaddr = fs_excp_bvaddr;
@@ -201,6 +202,8 @@ wire        inst_syscall;
 wire        inst_mfc0;
 wire        inst_mtc0;
 wire        inst_eret;
+//lab9 added
+wire        inst_break;
 
 wire        reserved_inst = !(
 inst_addu | inst_subu | inst_slt | inst_sltu | inst_and |
@@ -408,6 +411,7 @@ assign inst_syscall = op_d[6'h00] & func_d[6'h0c];
 assign inst_eret    = op_d[6'h10] & rs_d[5'h10] & rt_d[5'd00] & rd_d[5'h00] & sa_d[5'h00] & func_d[6'h18];
 assign inst_mfc0    = op_d[6'h10] & rs_d[5'h00] & (ds_inst[10:3]==8'b0);
 assign inst_mtc0    = op_d[6'h10] & rs_d[5'h04] & (ds_inst[10:3]==8'b0);
+assign inst_break   = op_d[6'h00] & func_d[6'h0d];
 
 //add
 assign alu_op[ 0] = inst_addu   | inst_addiu | inst_add    | inst_addi | inst_lw  | inst_sw | inst_jal 
