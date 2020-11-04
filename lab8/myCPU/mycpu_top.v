@@ -51,6 +51,7 @@ wire [`WS_TO_CP0_BUS_WD-1:0] ws_to_cp0_bus;
 wire [`CP0_GENERAL_BUS_WD-1:0] cp0_general_bus;
 wire [31:0]                  cp0_EPC_bus;
 wire [31:0]                  cp0_rdata_bus;
+wire [7:0]                   cp0_cause_IP_bus;
 // IF stage
 if_stage if_stage(
     .clk            (clk            ),
@@ -105,7 +106,8 @@ id_stage id_stage(
     //to fs
     .br_bus         (br_bus         ),
     //from cp0
-    .cp0_general_bus(cp0_general_bus),
+    .cp0_general_bus    (cp0_general_bus    ),
+    .cp0_cause_IP_bus   (cp0_cause_IP_bus   ),
     //to rf: for write back
     .ws_to_rf_bus   (ws_to_rf_bus   )
 );
@@ -193,9 +195,10 @@ cp0 cp0(
     .ws_to_cp0_bus  (ws_to_cp0_bus  ),
     .ws_to_cp0_valid(ws_to_cp0_valid),
     //output
-    .cp0_general_bus(cp0_general_bus),
-    .cp0_rdata_bus  (cp0_rdata_bus  ),
-    .cp0_EPC_bus    (cp0_EPC_bus    )
+    .cp0_general_bus (cp0_general_bus ),
+    .cp0_cause_IP_bus(cp0_cause_IP_bus),
+    .cp0_rdata_bus   (cp0_rdata_bus   ),
+    .cp0_EPC_bus     (cp0_EPC_bus     )
 );
 
 endmodule

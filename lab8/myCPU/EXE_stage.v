@@ -64,7 +64,8 @@ wire        inst_mtc0;
 wire        inst_mfc0;
 assign out_es_valid = es_valid;
 assign {
-        ds_bd          ,//232
+        ds_excp_bvaddr  ,//264:233
+        ds_bd           ,//232
         cp0_dest        ,//231:224
         inst_eret       ,//223
         inst_mtc0       ,//222
@@ -125,14 +126,24 @@ wire [3:0]  swr_wen       ;
 wire [7:0]  cp0_dest;
 wire       es_excp_valid;
 wire [6:2] es_excp_execode;
+wire [31:0]ds_excp_bvaddr;
+wire [31:0]es_excp_bvaddr;
 assign es_excp_valid = 
                   (reset || cp0_status_EXL)     ? 1'h0   :
                   (ds_excp_valid)               ? 1'h1   :
-                  1'h0;
+                  (unalgn_load_op || unalgn_mem_we || overflow)? 1'h1:1'h0;
 assign es_excp_execode = 
-                  (reset || cp0_status_EXL) ? 5'h00             :
-                  (ds_excp_valid)           ? ds_excp_execode   :
+                  (reset || cp0_status_EXL)     ? 5'h00             :
+                  (ds_excp_valid)               ? ds_excp_execode   :
+                  (unalgn_load_op)              ? 5'h04             :
+                  (unalgn_mem_we)               ? 5'h05             :
+                  (overflow)                    ? 5'h0c             :
                   5'h00;
+assign es_excp_bvaddr = 
+                  (ds_excp_valid)                   ? ds_excp_bvaddr    :
+                  (unalgn_load_op || unalgn_mem_we) ? data_sram_addr    :
+                  32'b0;
+//TODO: unalgn_load_op\unalgn_mem_we\overflow
 
 //assign es_excp_valid = !(reset || cp0_status_EXL) && (ds_to_es_valid && es_allowin) && ds_excp_valid;
 //assign es_excp_execode = {5{ds_to_es_valid && es_allowin}} & ds_excp_execode |
@@ -151,6 +162,7 @@ assign {
 assign es_res_from_mem = es_load_op;
 assign es_result = {32{es_mfhi}}&hi | {32{es_mflo}}&lo | es_alu_result;
 assign es_to_ms_bus = { 
+                        es_excp_bvaddr  ,//159:128
                         es_bd           ,//127
                         cp0_dest        ,//126:119
                         inst_eret       ,//118

@@ -32,6 +32,7 @@ module id_stage(
     output [`BR_BUS_WD       -1:0] br_bus        ,
     //from cp0
     input  [`CP0_GENERAL_BUS_WD-1:0]cp0_general_bus,
+    input  [7:0]                    cp0_cause_IP_bus,
     //to rf: for write back
     input  [`WS_TO_RF_BUS_WD -1:0] ws_to_rf_bus
 );
@@ -40,24 +41,33 @@ reg         ds_valid   ;
 wire        ds_ready_go;
 
 wire [31                 :0] fs_pc;
+wire [31                 :0] fs_excp_bvaddr;
 reg  [`FS_TO_DS_BUS_WD -1:0] fs_to_ds_bus_r;
-assign fs_pc = fs_to_ds_bus[31:0];
+assign fs_pc            = fs_to_ds_bus[31:0];
+assign fs_excp_bvaddr   = fs_pc;
 
 //exception tag: add here
-wire [7:0]  cp0_dest;
+wire [7:0] cp0_dest;
 wire       ds_excp_valid;
 wire [6:2] ds_excp_execode;
-assign cp0_dest = {sel,rd};
+wire [31:0]ds_excp_bvaddr;
+wire [7:0] cp0_cause_IP;
 
+assign cp0_cause_IP = cp0_cause_IP_bus;
+assign cp0_dest = {sel,rd};
 assign ds_excp_valid = 
                   (reset || cp0_status_EXL)     ? 1'h0   :
-                  (fs_excp_valid||inst_syscall) ? 1'h1   :
-                  1'h0;
+                  (fs_excp_valid)               ? 1'h1   :
+                  (cp0_status_IM & cp0_cause_IP)? 1'h1   :
+                  (inst_syscall||reserved_inst) ? 1'h1:1'h0;
 assign ds_excp_execode = 
-                  (reset || cp0_status_EXL) ? 5'h00             :
-                  (fs_excp_valid)           ? fs_excp_execode   :
-                  (inst_syscall)            ? 5'h08             :
+                  (reset || cp0_status_EXL)     ? 5'h00             :
+                  (fs_excp_valid)               ? fs_excp_execode   :
+                  (cp0_status_IM & cp0_cause_IP)? 5'h00             :
+                  (inst_syscall)                ? 5'h08             :
+                  (reserved_inst)               ? 5'h0a             :
                   5'h00;
+assign ds_excp_bvaddr = fs_excp_bvaddr;
 
 wire        eret_flush;
 wire [7:0]  cp0_status_IM;
@@ -192,6 +202,19 @@ wire        inst_mfc0;
 wire        inst_mtc0;
 wire        inst_eret;
 
+wire        reserved_inst = !(
+inst_addu | inst_subu | inst_slt | inst_sltu | inst_and |
+inst_or   | inst_xor  | inst_nor | inst_sll  | inst_srl | inst_sra |
+inst_addiu | inst_lui | inst_lw  | inst_sw   | inst_beq | inst_bne | inst_jal | inst_jr |
+inst_add   | inst_addi | inst_sub  | inst_slti | inst_sltiu| inst_andi | inst_ori |
+inst_xori  | inst_sllv | inst_srlv | inst_srav | inst_mult | inst_multu|
+inst_div   | inst_divu | inst_mfhi | inst_mflo | inst_mthi | inst_mtlo |
+inst_lb  | inst_lbu | inst_lh  | inst_lhu | inst_sb | inst_sh |
+inst_lwl | inst_lwr | inst_swl | inst_swr |
+inst_bgez| inst_bgtz| inst_blez| inst_bltz| inst_j | inst_bltzal | inst_bgezal | inst_jalr |
+inst_syscall | inst_mfc0 | inst_mtc0 | inst_eret
+);
+
 wire        dst_is_r31;  
 wire        dst_is_rt;   
 
@@ -233,7 +256,8 @@ assign br_stall = ds_ready_go;
 assign br_bus       = {make_bd,br_stall,br_taken,br_target};
 
 assign ds_to_es_bus = { 
-                        ds_bd          ,//232
+                        ds_excp_bvaddr  ,//264:233
+                        ds_bd           ,//232
                         cp0_dest        ,//231:224
                         inst_eret       ,//223
                         inst_mtc0       ,//222

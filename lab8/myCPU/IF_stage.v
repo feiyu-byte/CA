@@ -39,13 +39,16 @@ assign {make_bd,br_stall,br_taken,br_target} = br_bus;
 //exception tag: add here
 wire       fs_excp_valid;
 wire [6:2] fs_excp_execode;
+wire [31:0]fs_excp_bvaddr;
 //exception cause: add here
 assign fs_excp_valid = 
                   (reset || cp0_status_EXL)     ? 1'h0   :
-                  1'h0;
+                  (fs_pc[1:0]!=2'b0)            ? 1'h1:1'h0;
 assign fs_excp_execode = 
-                  (reset || cp0_status_EXL) ? 5'h00             :
+                  (reset || cp0_status_EXL)     ? 5'h00  :
+                  (fs_pc[1:0]!=2'b0)            ? 5'h04  :
                   5'h00;
+assign fs_excp_bvaddr = fs_pc;
 
 wire        eret_flush;
 wire [7:0]  cp0_status_IM;
@@ -60,7 +63,8 @@ assign {
 
 wire [31:0] fs_inst;
 reg  [31:0] fs_pc;
-assign fs_to_ds_bus = { fs_bd,          //70
+assign fs_to_ds_bus = { 
+                        fs_bd,          //70
                         fs_excp_valid,  //69
                         fs_excp_execode,//68:64
                         fs_inst ,       //63:32

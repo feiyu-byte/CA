@@ -63,20 +63,23 @@ assign addr_offset3   =(ms_alu_result[1:0] == 2'b11);
 //exception tag: add here
 wire ms_excp_valid;
 wire [6:2] ms_excp_execode;
+wire [31:0]ms_excp_bvaddr;
+wire [31:0]es_excp_bvaddr;
 assign ms_excp_valid = 
                   (reset || cp0_status_EXL)     ? 1'h0   :
                   (es_excp_valid)               ? 1'h1   :
                   1'h0;
 assign ms_excp_execode = 
-                  (reset || cp0_status_EXL) ? 5'h00             :
-                  (es_excp_valid)           ? es_excp_execode   :
+                  (reset || cp0_status_EXL)     ? 5'h00             :
+                  (es_excp_valid)               ? es_excp_execode   :
                   5'h00;
-
+assign ms_excp_bvaddr = es_excp_bvaddr;
 wire       es_bd;
 wire       es_excp_valid;
 wire [4:0] es_excp_execode;
 assign out_ms_valid = ms_valid;
 assign {
+        es_excp_bvaddr  ,//159:128
         es_bd           ,//127
         cp0_dest        ,//126:119
         inst_eret       ,//118
@@ -118,6 +121,7 @@ assign {
 } = cp0_general_bus;
 
 assign ms_to_ws_bus = { 
+                        ms_excp_bvaddr  , //144:113
                         ms_bd           , //112
                         ms_rt_value     , //111:80
                         cp0_dest        , //86:79

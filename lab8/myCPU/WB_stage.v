@@ -57,6 +57,7 @@ wire        ms_excp_valid;
 wire [4:0]  ms_excp_execode;
 assign out_ws_valid = ws_valid;
 assign {
+        ms_excp_bvaddr  , //144:113
         ms_bd           , //112
         ws_rt_value     , //111:80
         cp0_addr        , //86:79
@@ -74,6 +75,8 @@ assign {
 //exception tag: add here
 wire       ws_excp_valid;
 wire [6:2] ws_excp_execode;
+wire [31:0]ws_excp_bvaddr;
+wire [31:0]ms_excp_bvaddr;
 assign ws_excp_valid = 
                   (reset || cp0_status_EXL)     ? 1'h0   :
                   (ms_excp_valid)               ? 1'h1   :
@@ -82,11 +85,13 @@ assign ws_excp_execode =
                   (reset || cp0_status_EXL) ? 5'h00             :
                   (ms_excp_valid)           ? ms_excp_execode   :
                   5'h00;
+assign ws_excp_bvaddr = ms_excp_bvaddr;
 wire to_cp0_eret;
 assign to_cp0_eret = inst_eret || ws_excp_valid;
 
 assign ws_to_cp0_valid = ws_excp_valid;
 assign ws_to_cp0_bus={    
+            ws_excp_bvaddr, //110:79  
             to_cp0_eret,    //78
             cp0_addr,       //77:70
             cp0_wdata,      //69:38
@@ -153,6 +158,7 @@ module cp0 (
     //to fs\ds\es\ms\ws
     //general-rdata-EPC
     output[`CP0_GENERAL_BUS_WD-1:0] cp0_general_bus,
+    output[7:0]                     cp0_cause_IP_bus,
     output[31:0]                    cp0_rdata_bus,
     output[31:0]                    cp0_EPC_bus
 );
@@ -168,17 +174,23 @@ wire [31:0] cp0_rdata;
 assign cp0_rdata = 
     {32{cp0_addr==`CR_STATUS}}  & cp0_status_rdata   |
     {32{cp0_addr==`CR_CAUSE}}   & cp0_cause_rdata    |
-    {32{cp0_addr==`CR_EPC}}     & cp0_EPC 
+    {32{cp0_addr==`CR_EPC}}     & cp0_EPC            |
+    {32{cp0_addr==`CR_COUNT}}   & cp0_count          |
+    {32{cp0_addr==`CR_COMPARE}} & cp0_compare        |
+    {32{cp0_addr==`CR_BVADDR}}  & cp0_bvaddr
     ;
 wire        eret_flush;
 wire        mtc0_we;
 wire [7:0]  cp0_addr;
 wire [31:0] cp0_wdata;
 wire [4:0]  ws_excp_execode;
+wire [31:0] ws_excp_bvaddr;
 wire [31:0] ws_pc;
 wire        ws_bd;
 
-assign {    eret_flush,     //78
+assign {    
+            ws_excp_bvaddr, //110:79
+            eret_flush,     //78
             cp0_addr,       //77:70
             cp0_wdata,      //69:38
             ws_excp_execode,//37:33
@@ -246,11 +258,21 @@ always @(posedge clk) begin
 end
 always @(posedge clk) begin
     if(reset)       cp0_cause_TI <= 1'b0;
-    ///to be added
+    else if(mtc0_we && cp0_addr == `CR_COMPARE)
+                    cp0_cause_TI <= 1'b0;
+    else if(count_eq_compare)
+                    cp0_cause_TI <= 1'b1;
 end
+//NOTICE: no ext_int_in given
 always @(posedge clk) begin
-    if(reset)       cp0_cause_IP <= 8'b0;
-    ///to be added
+    if(reset)   cp0_cause_IP[7:2] <= 6'b0;
+    else begin
+                cp0_cause_IP[7]   <= cp0_cause_TI; 
+    end
+
+    if(reset)   cp0_cause_IP[1:0] <= 2'b0;
+    else if(mtc0_we && cp0_addr==`CR_CAUSE)
+                cp0_cause_IP[1:0] <= cp0_wdata[9:8];
 end
 always @(posedge clk) begin
     if(reset)       cp0_cause_execode <= 5'b0;
@@ -264,5 +286,28 @@ always @(posedge clk) begin
         cp0_EPC <= ws_bd ? ws_pc-32'd4 : ws_pc;
     else if(mtc0_we && cp0_addr==`CR_EPC)
         cp0_EPC <= cp0_wdata;
+end
+//{                                            } == bvaddr
+reg [31:0]  cp0_bvaddr;
+always @(posedge clk) begin
+    if(ws_to_cp0_valid &&  (ws_excp_execode==5'h04 || ws_excp_execode==5'h05))
+        cp0_bvaddr <= ws_excp_bvaddr;
+end
+//{                                            } == count & compare
+reg         tick;
+wire        count_eq_compare;
+reg [31:0]  cp0_count;
+reg [31:0]  cp0_compare;
+assign count_eq_compare = (cp0_count==cp0_compare);
+always @(posedge clk) begin
+    if(reset)   tick <= 1'b0;
+    else        tick <= ~tick;
+
+    if(mtc0_we && cp0_addr==`CR_COUNT)
+                    cp0_count <= cp0_wdata;
+    else if(tick)   cp0_count <= cp0_count + 32'b1;
+
+    if(mtc0_we && cp0_addr==`CR_COMPARE)
+        cp0_compare <= cp0_wdata;
 end
 endmodule
