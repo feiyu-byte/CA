@@ -2,7 +2,8 @@ module alu(
   input  [11:0] alu_op,
   input  [31:0] alu_src1,
   input  [31:0] alu_src2,
-  output [31:0] alu_result
+  output [31:0] alu_result,
+  output        alu_of        //overflow flag
 );
 
 wire op_add;   //加法操作
@@ -51,11 +52,16 @@ wire [31:0] adder_b;
 wire        adder_cin;
 wire [31:0] adder_result;
 wire        adder_cout;
+wire        overflow;
 
 assign adder_a   = alu_src1;
 assign adder_b   = (op_sub | op_slt | op_sltu) ? ~alu_src2 : alu_src2;
 assign adder_cin = (op_sub | op_slt | op_sltu) ? 1'b1      : 1'b0;
 assign {adder_cout, adder_result} = adder_a + adder_b + adder_cin;
+assign overflow = (
+  op_sub && (alu_src1[31]!=alu_src2[31]) && (alu_src1[31]!=adder_result[31]) |
+  op_add && (alu_src1[31]==alu_src2[31]) && (alu_src1[31]!=adder_result[31]) 
+);
 
 // ADD, SUB result
 assign add_sub_result = adder_result;
@@ -95,5 +101,5 @@ assign alu_result = ({32{op_add|op_sub}} & add_sub_result)
                   | ({32{op_lui       }} & lui_result)
                   | ({32{op_sll       }} & sll_result)
                   | ({32{op_srl|op_sra}} & sr_result);
-
+assign alu_of = overflow;
 endmodule

@@ -256,6 +256,7 @@ assign br_stall = ds_ready_go;
 assign br_bus       = {make_bd,br_stall,br_taken,br_target};
 
 assign ds_to_es_bus = { 
+                        overflow_en     ,//265
                         ds_excp_bvaddr  ,//264:233
                         ds_bd           ,//232
                         cp0_dest        ,//231:224
@@ -423,6 +424,7 @@ assign alu_op[ 8] = inst_sll  | inst_sllv; //sll
 assign alu_op[ 9] = inst_srl  | inst_srlv; //srl
 assign alu_op[10] = inst_sra  | inst_srav; //sra
 assign alu_op[11] = inst_lui; //lui
+assign overflow_en= inst_add || inst_addi || inst_sub;
 
 assign src1_is_sa   = inst_sll   | inst_srl    | inst_sra;
 assign src1_is_pc   = inst_jal   | inst_bgezal | inst_bltzal | inst_jalr;

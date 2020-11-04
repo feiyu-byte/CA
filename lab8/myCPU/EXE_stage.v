@@ -64,6 +64,7 @@ wire        inst_mtc0;
 wire        inst_mfc0;
 assign out_es_valid = es_valid;
 assign {
+        overflow_en     ,//265
         ds_excp_bvaddr  ,//264:233
         ds_bd           ,//232
         cp0_dest        ,//231:224
@@ -124,27 +125,39 @@ wire [3:0]  swr_wen       ;
 
 //exception tag: add here
 wire [7:0]  cp0_dest;
-wire       es_excp_valid;
-wire [6:2] es_excp_execode;
-wire [31:0]ds_excp_bvaddr;
-wire [31:0]es_excp_bvaddr;
+wire        es_excp_valid;
+wire [6:2]  es_excp_execode;
+wire [31:0] ds_excp_bvaddr;
+wire [31:0] es_excp_bvaddr;
+wire        unalgn_load_op;
+wire        unalgn_mem_we;
+wire        es_alu_overflow;
+wire        overflow_en;
+wire        es_overflow;
 assign es_excp_valid = 
                   (reset || cp0_status_EXL)     ? 1'h0   :
                   (ds_excp_valid)               ? 1'h1   :
-                  (unalgn_load_op || unalgn_mem_we || overflow)? 1'h1:1'h0;
+                  (unalgn_load_op || unalgn_mem_we || es_overflow)? 1'h1:1'h0;
 assign es_excp_execode = 
                   (reset || cp0_status_EXL)     ? 5'h00             :
                   (ds_excp_valid)               ? ds_excp_execode   :
                   (unalgn_load_op)              ? 5'h04             :
                   (unalgn_mem_we)               ? 5'h05             :
-                  (overflow)                    ? 5'h0c             :
+                  (es_overflow)                 ? 5'h0c             :
                   5'h00;
 assign es_excp_bvaddr = 
                   (ds_excp_valid)                   ? ds_excp_bvaddr    :
                   (unalgn_load_op || unalgn_mem_we) ? data_sram_addr    :
                   32'b0;
-//TODO: unalgn_load_op\unalgn_mem_we\overflow
-
+wire unalgn_op;
+assign unalgn_op = (
+    es_mem_op_w  && data_sram_addr[1:0]!=2'b0   |
+    es_mem_op_h  && data_sram_addr[0]!=1'b0     |
+    es_mem_op_hu && data_sram_addr[0]!=1'b0     
+);
+assign unalgn_load_op = es_load_op  && unalgn_op;
+assign unalgn_mem_we = es_mem_we    && unalgn_op;
+assign es_overflow = overflow_en && es_alu_overflow;
 //assign es_excp_valid = !(reset || cp0_status_EXL) && (ds_to_es_valid && es_allowin) && ds_excp_valid;
 //assign es_excp_execode = {5{ds_to_es_valid && es_allowin}} & ds_excp_execode |
 //                         {5{0}} & 5'b0;
@@ -238,7 +251,8 @@ alu u_alu(
     .alu_op     (es_alu_op    ),
     .alu_src1   (es_alu_src1  ),//2 --> 1 little bug
     .alu_src2   (es_alu_src2  ),
-    .alu_result (es_alu_result)
+    .alu_result (es_alu_result),
+    .alu_of     (es_alu_overflow)
     );
 
 assign data_sram_en    = 1'b1;
