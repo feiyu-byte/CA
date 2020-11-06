@@ -21,7 +21,8 @@ module mycpu_top(
 );
 reg         reset;
 always @(posedge clk) reset <= ~resetn;
-
+wire         ms_inst_eret;
+wire         ws_inst_eret;
 wire         ds_allowin;
 wire         es_allowin;
 wire         ms_allowin;
@@ -58,6 +59,7 @@ if_stage if_stage(
     .reset          (reset          ),
     //allowin
     .ds_allowin     (ds_allowin     ),
+    .out_ws_valid   (out_ws_valid   ),
     //brbus
     .br_bus         (br_bus         ),
     //outputs
@@ -119,6 +121,12 @@ exe_stage exe_stage(
     .ms_allowin     (ms_allowin     ),
     .es_allowin     (es_allowin     ),
     .es_excp_valid  (es_excp_valid  ),
+    .ms_excp_valid  (ms_excp_valid  ),
+    .ws_excp_valid  (ws_excp_valid  ),
+    .out_ms_valid   (out_ms_valid   ),
+    .out_ws_valid   (out_ws_valid   ),
+    .ms_inst_eret   (ms_inst_eret   ),
+    .ws_inst_eret   (ws_inst_eret   ),
     //from ds
     .ds_to_es_valid (ds_to_es_valid ),
     .ds_to_es_bus   (ds_to_es_bus   ),
@@ -150,6 +158,7 @@ mem_stage mem_stage(
     //forward
     .ms_to_ds_fw_bus(ms_to_ds_fw_bus),
     .out_ms_valid   (out_ms_valid   ),
+    .ms_inst_eret   (ms_inst_eret   ),
     //to ws
     .ms_to_ws_valid (ms_to_ws_valid ),
     .ms_to_ws_bus   (ms_to_ws_bus   ),
@@ -168,6 +177,7 @@ wb_stage wb_stage(
     //from ms
     .ms_to_ws_valid (ms_to_ws_valid ),
     .ms_to_ws_bus   (ms_to_ws_bus   ),
+    .ws_inst_eret   (ws_inst_eret   ),
     //forward
     .ws_to_ds_fw_bus(ws_to_ds_fw_bus),
     .out_ws_valid   (out_ws_valid   ),

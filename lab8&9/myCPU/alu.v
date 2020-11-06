@@ -59,8 +59,8 @@ assign adder_b   = (op_sub | op_slt | op_sltu) ? ~alu_src2 : alu_src2;
 assign adder_cin = (op_sub | op_slt | op_sltu) ? 1'b1      : 1'b0;
 assign {adder_cout, adder_result} = adder_a + adder_b + adder_cin;
 assign overflow = (
-  op_sub && (alu_src1[31]!=alu_src2[31]) && (alu_src1[31]!=adder_result[31]) |
-  op_add && (alu_src1[31]==alu_src2[31]) && (alu_src1[31]!=adder_result[31]) 
+  op_sub & (alu_src1[31]!=alu_src2[31]) & (alu_src1[31]!=adder_result[31]) |
+  op_add & (alu_src1[31]==alu_src2[31]) & (alu_src1[31]!=adder_result[31]) 
 );
 
 // ADD, SUB result

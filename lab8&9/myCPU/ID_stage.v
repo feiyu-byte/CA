@@ -44,7 +44,7 @@ wire [31                 :0] fs_pc;
 wire [31                 :0] fs_excp_bvaddr;
 reg  [`FS_TO_DS_BUS_WD -1:0] fs_to_ds_bus_r;
 assign fs_pc            = fs_to_ds_bus[31:0];
-assign fs_excp_bvaddr   = fs_pc;
+//assign fs_excp_bvaddr   = fs_pc;
 
 //exception tag: add here
 wire [7:0] cp0_dest;
@@ -57,18 +57,27 @@ assign cp0_cause_IP = cp0_cause_IP_bus;
 assign cp0_dest = {sel,rd};
 assign ds_excp_valid = 
                   (reset || cp0_status_EXL)     ? 1'h0   :
-                  (fs_excp_valid)               ? 1'h1   :
                   (cp0_status_IM & cp0_cause_IP)? 1'h1   :
+                  (fs_excp_valid)               ? 1'h1   :
                   (inst_syscall||inst_break||reserved_inst) ? 1'h1:1'h0;
 assign ds_excp_execode = 
-                  (reset || cp0_status_EXL)     ? 5'h00             :
-                  (fs_excp_valid)               ? fs_excp_execode   :
-                  (cp0_status_IM & cp0_cause_IP)? 5'h00             :
-                  (inst_syscall)                ? 5'h08             :
-                  (inst_break)                  ? 5'h09             :
-                  (reserved_inst)               ? 5'h0a             :
-                  5'h00;
+                  (reset || cp0_status_EXL)     ? 5'h00    :
+                  (cp0_status_IM & cp0_cause_IP)? `EX_INT  :
+                  (fs_excp_execode==`EX_ADEL)   ? `EX_ADEL :
+                  (reserved_inst)               ? `EX_RI   :
+                  (inst_syscall)                ? `EX_SYS  :
+                  (inst_break)                  ? `EX_BP   :
+                  5'h00
+                  ;
 assign ds_excp_bvaddr = fs_excp_bvaddr;
+// assign ds_excp_execode = 
+//                   (reset || cp0_status_EXL)     ? 5'h00             :
+//                   (cp0_status_IM & cp0_cause_IP)? 5'h00             :
+//                   (fs_excp_valid)               ? fs_excp_execode   :
+//                   (inst_syscall)                ? 5'h08             :
+//                   (inst_break)                  ? 5'h09             :
+//                   (reserved_inst)               ? 5'h0a             :
+//                   5'h00;
 
 wire        eret_flush;
 wire [7:0]  cp0_status_IM;
@@ -88,7 +97,7 @@ wire        ds_excp_valid;
 wire [4:0]  ds_excp_execode;
 wire [31:0] ds_inst;
 wire [31:0] ds_pc  ;
-assign {
+assign {fs_excp_bvaddr, //102:71
         fs_bd,          //70
         fs_excp_valid,  //69
         fs_excp_execode,//68:64
@@ -215,7 +224,7 @@ inst_div   | inst_divu | inst_mfhi | inst_mflo | inst_mthi | inst_mtlo |
 inst_lb  | inst_lbu | inst_lh  | inst_lhu | inst_sb | inst_sh |
 inst_lwl | inst_lwr | inst_swl | inst_swr |
 inst_bgez| inst_bgtz| inst_blez| inst_bltz| inst_j | inst_bltzal | inst_bgezal | inst_jalr |
-inst_syscall | inst_mfc0 | inst_mtc0 | inst_eret
+inst_syscall | inst_break | inst_mfc0 | inst_mtc0 | inst_eret
 );
 
 wire        dst_is_r31;  
@@ -312,7 +321,7 @@ assign mfc0_block     = es_to_ms_bus[116]&out_es_valid | ms_to_ws_bus[76]&out_ms
 assign ld_block       = es_to_ms_bus[70]&out_es_valid;
 assign es_forward     = ((rf_raddr1==es_addr&&rf_raddr1!=0)|(rf_raddr2==es_addr&&rf_raddr2!=0));
 assign ms_forward     = ((rf_raddr1==ms_addr&&rf_raddr1!=0)|(rf_raddr2==ms_addr&&rf_raddr2!=0));
-assign ds_ready_go    = ( !(ld_block& es_forward | mfc0_block & (es_forward|ms_forward))|inst_mflo|inst_mfhi) & (!(es_excp_valid& out_es_valid |ms_excp_valid & out_ms_valid |ws_excp_valid & out_ws_valid));
+assign ds_ready_go    = ( !(ld_block& es_forward | mfc0_block & (es_forward|ms_forward))|inst_mflo|inst_mfhi);/*& (!(es_excp_valid& out_es_valid |ms_excp_valid & out_ms_valid |ws_excp_valid & out_ws_valid))*/
 assign ds_allowin     = !ds_valid || ds_ready_go && es_allowin;
 assign ds_to_es_valid = ds_valid && ds_ready_go;
 always @(posedge clk) begin
@@ -322,7 +331,7 @@ always @(posedge clk) begin
 end
 
 always @(posedge clk) begin
-    if (reset || eret_flush ) begin
+    if (reset || eret_flush) begin
         ds_valid <= 1'b0;
     end
     else if (ds_allowin) begin

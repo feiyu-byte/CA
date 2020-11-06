@@ -7,6 +7,7 @@ module if_stage(
     input                          ds_allowin     ,
     //brbus
     input  [`BR_BUS_WD       -1:0] br_bus         ,
+    input                          out_ws_valid,
     //to ds
     output                         fs_to_ds_valid ,
     output [`FS_TO_DS_BUS_WD -1:0] fs_to_ds_bus   ,
@@ -46,7 +47,7 @@ assign fs_excp_valid =
                   (fs_pc[1:0]!=2'b0)            ? 1'h1:1'h0;
 assign fs_excp_execode = 
                   (reset || cp0_status_EXL)     ? 5'h00  :
-                  (fs_pc[1:0]!=2'b0)            ? 5'h04  :
+                  (fs_pc[1:0]!=2'b0)            ? `EX_ADEL  :
                   5'h00;
 assign fs_excp_bvaddr = fs_pc;
 
@@ -63,7 +64,7 @@ assign {
 
 wire [31:0] fs_inst;
 reg  [31:0] fs_pc;
-assign fs_to_ds_bus = { 
+assign fs_to_ds_bus = { fs_excp_bvaddr, //102:71
                         fs_bd,          //70
                         fs_excp_valid,  //69
                         fs_excp_execode,//68:64
@@ -94,7 +95,7 @@ always @(posedge clk) begin
         fs_pc <= 32'hbfc0037c;  //0xbfc00380
     end
     else if(eret_flush) begin
-        fs_pc <= cp0_EPC_bus;
+        fs_pc <= cp0_EPC_bus-32'h4;
     end
     else if (to_fs_valid && fs_allowin) begin
         fs_pc <= nextpc;

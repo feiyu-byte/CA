@@ -7,6 +7,8 @@ module exe_stage(
     input                          ms_allowin    ,
     output                         es_allowin    ,
     output                         es_excp_valid ,
+    input                          ms_excp_valid ,
+    input                          ws_excp_valid ,
     //from ds
     input                          ds_to_es_valid,
     input  [`DS_TO_ES_BUS_WD -1:0] ds_to_es_bus  ,
@@ -16,6 +18,10 @@ module exe_stage(
     //forward
     output [`FW_BUS_WD       -1:0] es_to_ds_fw_bus,
     output                         out_es_valid,
+    input                         out_ms_valid,
+    input                         out_ws_valid,
+    input                        ms_inst_eret,
+    input                        ws_inst_eret,
     //from cp0
     input  [`CP0_GENERAL_BUS_WD-1:0]cp0_general_bus,
     // data sram interface
@@ -141,9 +147,9 @@ assign es_excp_valid =
 assign es_excp_execode = 
                   (reset || cp0_status_EXL)     ? 5'h00             :
                   (ds_excp_valid)               ? ds_excp_execode   :
-                  (unalgn_load_op)              ? 5'h04             :
-                  (unalgn_mem_we)               ? 5'h05             :
-                  (es_overflow)                 ? 5'h0c             :
+                  (es_overflow)                 ? `EX_OV            :
+                  (unalgn_load_op)              ? `EX_ADEL          :
+                  (unalgn_mem_we)               ? `EX_ADES          :
                   5'h00;
 assign es_excp_bvaddr = 
                   (ds_excp_valid)                   ? ds_excp_bvaddr    :
@@ -151,9 +157,9 @@ assign es_excp_bvaddr =
                   32'b0;
 wire unalgn_op;
 assign unalgn_op = (
-    es_mem_op_w  && data_sram_addr[1:0]!=2'b0   |
-    es_mem_op_h  && data_sram_addr[0]!=1'b0     |
-    es_mem_op_hu && data_sram_addr[0]!=1'b0     
+    es_mem_op_w  & data_sram_addr[1:0]!=2'b0   |
+    es_mem_op_h  & data_sram_addr[0]!=1'b0     |
+    es_mem_op_hu & data_sram_addr[0]!=1'b0     
 );
 assign unalgn_load_op = es_load_op  && unalgn_op;
 assign unalgn_mem_we = es_mem_we    && unalgn_op;
@@ -201,11 +207,11 @@ assign es_to_ds_fw_bus = {es_gr_we    ,  //37:37
                           es_dest     ,  //36:32
                           es_result      //31:0
                          };
-assign es_ready_go    = ~(es_div_sel[1]&~signed_dout_tvalid | es_div_sel[0]&~unsigned_dout_tvalid);
+assign es_ready_go    = !(es_div_sel[1]&~signed_dout_tvalid | es_div_sel[0]&~unsigned_dout_tvalid);
 assign es_allowin     = !es_valid || es_ready_go && ms_allowin;
 assign es_to_ms_valid =  es_valid && es_ready_go;
 always @(posedge clk) begin
-    if (reset || eret_flush ) begin
+    if (reset || eret_flush) begin
         es_valid <= 1'b0;
     end
     else if (es_allowin) begin
@@ -256,7 +262,7 @@ alu u_alu(
     );
 
 assign data_sram_en    = 1'b1;
-assign data_sram_wen   = {4{es_mem_we&&es_valid}}&({4{es_mem_op_b}}&sb_wen | {4{es_mem_op_h}}&sh_wen | {4{es_mem_op_wr}}&swr_wen | {4{es_mem_op_wl}}&swl_wen | {4{es_mem_op_w}}) ;
+assign data_sram_wen   = {4{es_mem_we&es_valid&!(es_valid&es_excp_valid | (ms_excp_valid|ms_inst_eret) & out_ms_valid |(ws_excp_valid|ws_inst_eret) & out_ws_valid)}}&({4{es_mem_op_b}}&sb_wen | {4{es_mem_op_h}}&sh_wen | {4{es_mem_op_wr}}&swr_wen | {4{es_mem_op_wl}}&swl_wen | {4{es_mem_op_w}}) ;
 assign data_sram_addr  = es_alu_result;
 assign data_sram_wdata = {32{es_mem_op_b|es_mem_op_h|es_mem_op_w}}&st_bhw_wdata | {32{es_mem_op_wr}}&st_wr_wdata | {32{es_mem_op_wl}}&st_wl_wdata;
 
@@ -355,8 +361,8 @@ assign lo_wdata = {32{es_mul_sel}}&es_lo | {32{es_div_sel[1]}}&signed_quotient |
 				  {32{es_div_sel[0]}}&unsigned_quotient | {32{es_mtlo}}&es_rs_value ;
 assign hi_wdata = {32{es_mul_sel}}&es_hi | {32{es_div_sel[1]}}&signed_remainder | 
 				  {32{es_div_sel[0]}}&unsigned_remainder | {32{es_mthi}}&es_rs_value ;
-assign hi_we = es_valid&(es_mul_sel|es_div_sel[1]|es_div_sel[0]|es_mthi);
-assign lo_we = es_valid&(es_mul_sel|es_div_sel[1]|es_div_sel[0]|es_mtlo);
+assign hi_we = es_valid&(es_mul_sel|es_div_sel[1]|es_div_sel[0]|es_mthi)&!(es_valid&es_excp_valid | (ms_excp_valid|ms_inst_eret) & out_ms_valid |(ws_excp_valid|ws_inst_eret) & out_ws_valid);
+assign lo_we = es_valid&(es_mul_sel|es_div_sel[1]|es_div_sel[0]|es_mtlo)&!(es_valid&es_excp_valid | (ms_excp_valid|ms_inst_eret) & out_ms_valid |(ws_excp_valid|ws_inst_eret) & out_ws_valid);
 
 HI_LO u_HI_LO(
 	.clk(clk),

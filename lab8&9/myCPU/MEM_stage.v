@@ -16,6 +16,7 @@ module mem_stage(
     //to ws
     output                         ms_to_ws_valid,
     output [`MS_TO_WS_BUS_WD -1:0] ms_to_ws_bus  ,
+    output                         ms_inst_eret,
     //from data-sram
     input  [31                 :0] data_sram_rdata,
     //from cp0
@@ -43,7 +44,7 @@ wire [31:0] ld_bhw_rdata  ;
 wire [31:0] ld_wl_rdata   ;
 wire [31:0] ld_wr_rdata   ;
 wire [31:0] ms_rt_value   ;
-
+assign ms_inst_eret = inst_eret;
 assign load_byte = {8{addr_offset0}}&data_sram_rdata[7:0]   | {8{addr_offset1}}&data_sram_rdata[15:8] |
                    {8{addr_offset2}}&data_sram_rdata[23:16] | {8{addr_offset3}}&data_sram_rdata[31:24];
 assign load_halfword  ={16{addr_offset0}}&data_sram_rdata[15:0] | {16{addr_offset2}}&data_sram_rdata[31:16];
@@ -121,9 +122,9 @@ assign {
 } = cp0_general_bus;
 
 assign ms_to_ws_bus = { 
-                        ms_excp_bvaddr  , //144:113
-                        ms_bd           , //112
-                        ms_rt_value     , //111:80
+                        ms_excp_bvaddr  , //151:120
+                        ms_bd           , //119
+                        ms_rt_value     , //118:87
                         cp0_dest        , //86:79
                         inst_eret       , //78
                         inst_mtc0       , //77
@@ -161,5 +162,5 @@ assign ms_final_result =    ms_res_from_mem ? mem_result
                                          : ms_alu_result;
 
 wire ms_bd;
-assign ms_bd = (reset)  ?   1'b0:ms_bd;
+assign ms_bd = (reset)  ?   1'b0:es_bd;
 endmodule
