@@ -158,7 +158,7 @@ exe_stage exe_stage(
     .data_sram_addr   (data_sram_addr ),
     .data_sram_wdata  (data_sram_wdata),
     .data_sram_addr_ok(data_sram_addr_ok),
-    .data_sram_data_ok(data_sram_data_ok),
+    .data_sram_data_ok(data_sram_data_ok)
 );
 // MEM stage
 mem_stage mem_stage(

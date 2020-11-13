@@ -334,9 +334,11 @@ always @(posedge clk) begin
     if (reset || eret_flush) begin
         ds_valid <= 1'b0;
     end
-    else if (ds_allowin) begin
+    else if (ds_allowin && fs_to_ds_valid) begin
         ds_valid <= fs_to_ds_valid;
     end
+    else if(!fs_to_ds_valid)
+        ds_valid <= 1'b0;
 end
 assign op   = ds_inst[31:26];
 assign rs   = ds_inst[25:21];

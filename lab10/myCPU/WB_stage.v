@@ -127,9 +127,11 @@ always @(posedge clk) begin
     if (reset || to_cp0_eret ) begin
         ws_valid <= 1'b0;
     end
-    else if (ws_allowin) begin
+    else if (ws_allowin && ms_to_ws_valid) begin
         ws_valid <= ms_to_ws_valid;
     end
+    else if(!ms_to_ws_valid)
+        ws_valid <= 1'b0;
 
     if (ms_to_ws_valid && ws_allowin) begin
         ms_to_ws_bus_r <= ms_to_ws_bus;

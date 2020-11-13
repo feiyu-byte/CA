@@ -218,9 +218,11 @@ always @(posedge clk) begin
     if (reset || eret_flush) begin
         es_valid <= 1'b0;
     end
-    else if (es_allowin) begin
+    else if (es_allowin && ds_to_es_valid) begin
         es_valid <= ds_to_es_valid;
     end
+    else if(!ds_to_es_valid)
+        es_valid <= 1'b0;
 
     if (ds_to_es_valid && es_allowin) begin
         ds_to_es_bus_r <= ds_to_es_bus;
@@ -265,8 +267,10 @@ alu u_alu(
     .alu_of     (es_alu_overflow)
     );
 
-assign data_sram_en    = 1'b1;
-assign data_sram_wen   = {4{es_mem_we&es_valid&!(es_valid&es_excp_valid | (ms_excp_valid|ms_inst_eret) & out_ms_valid |(ws_excp_valid|ws_inst_eret) & out_ws_valid)}}&({4{es_mem_op_b}}&sb_wen | {4{es_mem_op_h}}&sh_wen | {4{es_mem_op_wr}}&swr_wen | {4{es_mem_op_wl}}&swl_wen | {4{es_mem_op_w}}) ;
+//assign data_sram_en    = 1'b1;
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+assign data_sram_wr = es_load_op;
+assign data_sram_wstrb   = {4{es_mem_we&es_valid&!(es_valid&es_excp_valid | (ms_excp_valid|ms_inst_eret) & out_ms_valid |(ws_excp_valid|ws_inst_eret) & out_ws_valid)}}&({4{es_mem_op_b}}&sb_wen | {4{es_mem_op_h}}&sh_wen | {4{es_mem_op_wr}}&swr_wen | {4{es_mem_op_wl}}&swl_wen | {4{es_mem_op_w}}) ;
 assign data_sram_addr  = es_alu_result;
 assign data_sram_wdata = {32{es_mem_op_b|es_mem_op_h|es_mem_op_w}}&st_bhw_wdata | {32{es_mem_op_wr}}&st_wr_wdata | {32{es_mem_op_wl}}&st_wl_wdata;
 

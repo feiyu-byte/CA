@@ -148,9 +148,11 @@ always @(posedge clk) begin
     if (reset || eret_flush) begin
         ms_valid <= 1'b0;
     end
-    else if (ms_allowin) begin
+    else if (ms_allowin && es_to_ms_valid) begin
         ms_valid <= es_to_ms_valid;
     end
+    else if(!es_to_ms_valid)
+        ms_valid <= 1'b0;
 
     if (es_to_ms_valid && ms_allowin) begin
         es_to_ms_bus_r  <= es_to_ms_bus;
