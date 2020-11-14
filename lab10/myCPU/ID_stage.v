@@ -263,7 +263,7 @@ assign make_bd =  (   inst_beq
                    || inst_j
                    || inst_jalr
                    || inst_jr
-                  ) && ds_valid;
+                  ) && ds_valid && !bd_flag;
 assign br_stall = ds_ready_go;
 assign br_bus       = {make_bd,br_stall,br_taken,br_target};
 
@@ -324,6 +324,19 @@ assign ms_forward     = ((rf_raddr1==ms_addr&&rf_raddr1!=0)|(rf_raddr2==ms_addr&
 assign ds_ready_go    = ( !(ld_block& es_forward | mfc0_block & (es_forward|ms_forward))|inst_mflo|inst_mfhi);/*& (!(es_excp_valid& out_es_valid |ms_excp_valid & out_ms_valid |ws_excp_valid & out_ws_valid))*/
 assign ds_allowin     = !ds_valid || ds_ready_go && es_allowin;
 assign ds_to_es_valid = ds_valid && ds_ready_go;
+reg bd_flag;
+always @(posedge clk ) begin
+  if (reset) begin
+    // reset
+    bd_flag <=0;
+  end
+  else if (!fs_to_ds_valid&&ds_ready_go&&es_allowin)
+    bd_flag <=0;
+  else if (make_bd) begin
+    bd_flag <=1;
+  end
+
+end
 always @(posedge clk) begin
     if (fs_to_ds_valid && ds_allowin) begin
         fs_to_ds_bus_r <= fs_to_ds_bus;
@@ -334,11 +347,12 @@ always @(posedge clk) begin
     if (reset || eret_flush) begin
         ds_valid <= 1'b0;
     end
-    else if (ds_allowin && fs_to_ds_valid) begin
-        ds_valid <= fs_to_ds_valid;
-    end
-    else if(!fs_to_ds_valid)
+    else if(!fs_to_ds_valid&&ds_ready_go&&es_allowin )
         ds_valid <= 1'b0;
+    else if (ds_allowin && fs_to_ds_valid) begin
+        ds_valid <= 1'b1;
+    end
+    
 end
 assign op   = ds_inst[31:26];
 assign rs   = ds_inst[25:21];
@@ -512,7 +526,7 @@ assign br_taken = (   inst_beq  &&  rs_eq_rt
                    || inst_jr
                   ) && ds_valid;
 assign br_target = (   inst_beq || inst_bne || inst_bgez || inst_bgtz || inst_blez 
-					|| inst_bltz || inst_bltzal || inst_bgezal) ? (fs_pc + {{14{imm[15]}}, imm[15:0], 2'b0}) :
+					|| inst_bltz || inst_bltzal || inst_bgezal) ? (fs_pc+ 4 + {{14{imm[15]}}, imm[15:0], 2'b0}) :
                    (inst_jr || inst_jalr)              ? rs_value :
                   /*inst_jal*/              {fs_pc[31:28], jidx[25:0], 2'b0};
 //for block

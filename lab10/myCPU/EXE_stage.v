@@ -211,18 +211,34 @@ assign es_to_ds_fw_bus = {es_gr_we    ,  //37:37
                           es_dest     ,  //36:32
                           es_result      //31:0
                          };
-assign es_ready_go    = !(es_div_sel[1]&~signed_dout_tvalid | es_div_sel[0]&~unsigned_dout_tvalid);
+wire div_block;
+assign div_block = (es_div_sel[1]&~signed_dout_tvalid | es_div_sel[0]&~unsigned_dout_tvalid);
+assign es_ready_go    = !div_block & (!es_mem_we | es_mem_we & data_sram_data_ok) & (!es_load_op | es_load_op & data_sram_req & data_sram_addr_ok);
 assign es_allowin     = !es_valid || es_ready_go && ms_allowin;
 assign es_to_ms_valid =  es_valid && es_ready_go;
+
+reg cancel;
+always @(posedge clk) begin
+  if (reset) begin
+    // reset
+    cancel <= 1'b0;
+  end
+  else if (eret_flush) begin
+    cancel <= 1'b1;
+  end
+  else if (es_valid)
+    cancel <= 1'b0;
+end
 always @(posedge clk) begin
     if (reset || eret_flush) begin
         es_valid <= 1'b0;
     end
-    else if (es_allowin && ds_to_es_valid) begin
-        es_valid <= ds_to_es_valid;
-    end
-    else if(!ds_to_es_valid)
+    else if(!ds_to_es_valid && es_ready_go && ms_allowin)
         es_valid <= 1'b0;
+    else if (es_allowin && ds_to_es_valid) begin
+        es_valid <= 1'b1;
+    end
+    
 
     if (ds_to_es_valid && es_allowin) begin
         ds_to_es_bus_r <= ds_to_es_bus;
@@ -269,11 +285,49 @@ alu u_alu(
 
 //assign data_sram_en    = 1'b1;
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-assign data_sram_wr = es_load_op;
-assign data_sram_wstrb   = {4{es_mem_we&es_valid&!(es_valid&es_excp_valid | (ms_excp_valid|ms_inst_eret) & out_ms_valid |(ws_excp_valid|ws_inst_eret) & out_ws_valid)}}&({4{es_mem_op_b}}&sb_wen | {4{es_mem_op_h}}&sh_wen | {4{es_mem_op_wr}}&swr_wen | {4{es_mem_op_wl}}&swl_wen | {4{es_mem_op_w}}) ;
-assign data_sram_addr  = es_alu_result;
+reg req_flag;
+reg wait_addr_ok;
+reg wait_data_ok;
+always @(posedge clk) begin
+  if (reset) begin
+    // reset
+    wait_addr_ok <= 1'b0;
+  end
+  else if(data_sram_req && data_sram_addr_ok)
+    wait_addr_ok <= 1'b0;
+  else if (data_sram_req) begin
+    wait_addr_ok <= 1'b1;
+  end
+end
+always @(posedge clk ) begin
+  if (reset) begin
+    // reset
+    req_flag <= 1'b0;
+  end
+  else if(data_sram_req && data_sram_addr_ok)
+    req_flag <= 1'b1;
+  else if (data_sram_data_ok) begin
+    req_flag <= 1'b0;
+  end
+end
+always @(posedge clk ) begin
+  if (reset) begin
+    // reset
+    wait_data_ok <= 1'b0;
+  end
+  else if (data_sram_req && data_sram_addr_ok && es_mem_we) begin
+    wait_data_ok <= 1'b1;
+  end
+  else if(data_sram_data_ok)
+    wait_data_ok <= 1'b0;
+end
+assign data_sram_size = (es_mem_op_w | es_mem_op_wl&(addr_offset2|addr_offset3) | es_mem_op_wr&(addr_offset0|addr_offset1))?2'h2
+                        : (es_mem_op_h | es_mem_op_hu | es_mem_op_wl&addr_offset1 | es_mem_op_wr&addr_offset2)?2'h1:2'h0;
+assign data_sram_wr = es_mem_we;
+assign data_sram_wstrb   = {4{es_mem_we&es_valid&!cancel&!(es_valid&es_excp_valid | (ms_excp_valid|ms_inst_eret) & out_ms_valid |(ws_excp_valid|ws_inst_eret) & out_ws_valid)}}&({4{es_mem_op_b}}&sb_wen | {4{es_mem_op_h}}&sh_wen | {4{es_mem_op_wr}}&swr_wen | {4{es_mem_op_wl}}&swl_wen | {4{es_mem_op_w}}) ;
+assign data_sram_addr  = (es_mem_op_wl)? {es_alu_result[31:2],2'b0} : es_alu_result;
 assign data_sram_wdata = {32{es_mem_op_b|es_mem_op_h|es_mem_op_w}}&st_bhw_wdata | {32{es_mem_op_wr}}&st_wr_wdata | {32{es_mem_op_wl}}&st_wl_wdata;
-
+assign data_sram_req = !req_flag & !wait_data_ok & es_valid & ms_allowin&(es_mem_we|es_load_op);
 wire [31:0] signed_divisor_tdata,signed_dividend_tdata;
 wire [31:0] unsigned_divisor_tdata,unsigned_dividend_tdata;
 wire [63:0] signed_dout_tdata,unsigned_dout_tdata;

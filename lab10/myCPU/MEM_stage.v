@@ -141,18 +141,20 @@ assign ms_to_ds_fw_bus ={ms_gr_we,      //37:37
                         ms_dest,        //36:32
                         ms_final_result  //31:0
                         };
-assign ms_ready_go    = 1'b1;
+assign ms_ready_go    = !ms_res_from_mem | ms_res_from_mem & data_sram_data_ok;
 assign ms_allowin     = !ms_valid || ms_ready_go && ws_allowin;
-assign ms_to_ws_valid = ms_valid && ms_ready_go;
+assign ms_to_ws_valid = ms_valid && ms_ready_go ;
+
 always @(posedge clk) begin
     if (reset || eret_flush) begin
         ms_valid <= 1'b0;
     end
-    else if (ms_allowin && es_to_ms_valid) begin
-        ms_valid <= es_to_ms_valid;
-    end
-    else if(!es_to_ms_valid)
+    else if(!es_to_ms_valid && ms_ready_go)
         ms_valid <= 1'b0;
+    else if (ms_allowin && es_to_ms_valid) begin
+        ms_valid <= 1'b1;
+    end
+    
 
     if (es_to_ms_valid && ms_allowin) begin
         es_to_ms_bus_r  <= es_to_ms_bus;

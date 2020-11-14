@@ -89,7 +89,7 @@ assign ws_excp_execode =
                   5'h00;
 assign ws_excp_bvaddr = ms_excp_bvaddr;
 wire to_cp0_eret;
-assign to_cp0_eret = inst_eret || ws_excp_valid;
+assign to_cp0_eret = (inst_eret || ws_excp_valid )&& ws_valid;
 
 assign ws_to_cp0_valid = ws_excp_valid;
 assign ws_to_cp0_bus={   
@@ -127,11 +127,12 @@ always @(posedge clk) begin
     if (reset || to_cp0_eret ) begin
         ws_valid <= 1'b0;
     end
+    else if(!ms_to_ws_valid)
+        ws_valid <= 1'b0;
     else if (ws_allowin && ms_to_ws_valid) begin
         ws_valid <= ms_to_ws_valid;
     end
-    else if(!ms_to_ws_valid)
-        ws_valid <= 1'b0;
+    
 
     if (ms_to_ws_valid && ws_allowin) begin
         ms_to_ws_bus_r <= ms_to_ws_bus;
