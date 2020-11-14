@@ -321,7 +321,7 @@ assign mfc0_block     = es_to_ms_bus[116]&out_es_valid | ms_to_ws_bus[76]&out_ms
 assign ld_block       = es_to_ms_bus[70]&out_es_valid;
 assign es_forward     = ((rf_raddr1==es_addr&&rf_raddr1!=0)|(rf_raddr2==es_addr&&rf_raddr2!=0));
 assign ms_forward     = ((rf_raddr1==ms_addr&&rf_raddr1!=0)|(rf_raddr2==ms_addr&&rf_raddr2!=0));
-assign ds_ready_go    = ( !(ld_block& es_forward | mfc0_block & (es_forward|ms_forward))|inst_mflo|inst_mfhi);/*& (!(es_excp_valid& out_es_valid |ms_excp_valid & out_ms_valid |ws_excp_valid & out_ws_valid))*/
+assign ds_ready_go    =  !(ld_block& es_forward | mfc0_block & (es_forward|ms_forward))|inst_mflo|inst_mfhi;/*& (!(es_excp_valid& out_es_valid |ms_excp_valid & out_ms_valid |ws_excp_valid & out_ws_valid))*/
 assign ds_allowin     = !ds_valid || ds_ready_go && es_allowin;
 assign ds_to_es_valid = ds_valid && ds_ready_go;
 reg bd_flag;
@@ -330,7 +330,7 @@ always @(posedge clk ) begin
     // reset
     bd_flag <=0;
   end
-  else if (!fs_to_ds_valid&&ds_ready_go&&es_allowin)
+  else if (!fs_to_ds_valid&&ds_ready_go&&es_allowin || fs_to_ds_valid && ds_allowin)
     bd_flag <=0;
   else if (make_bd) begin
     bd_flag <=1;
@@ -474,7 +474,7 @@ assign dst_is_rt    =     inst_addiu | inst_lui | inst_lw | inst_addi | inst_slt
 assign gr_we        =     ~inst_sw   & ~inst_beq  & ~inst_bne  & ~inst_jr   & ~inst_mult & ~inst_multu 
 						& ~inst_div  & ~inst_divu & ~inst_mthi & ~inst_mtlo & ~inst_bgez & ~inst_bgtz 
 						& ~inst_blez & ~inst_bltz & ~inst_j    & ~inst_sb   & ~inst_sh   & ~inst_swr 
-						& ~inst_swl  & ~inst_eret & ~inst_mtc0 & ~inst_syscall;
+						& ~inst_swl  & ~inst_eret & ~inst_mtc0 & ~inst_syscall & ds_inst!=0;
 
 assign mem_we       = inst_sw | inst_sb | inst_sh | inst_swr | inst_swl;
 assign load_op      = inst_lw | inst_lb | inst_lbu | inst_lh | inst_lhu | inst_lwr | inst_lwl;

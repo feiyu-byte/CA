@@ -286,19 +286,8 @@ alu u_alu(
 //assign data_sram_en    = 1'b1;
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 reg req_flag;
-reg wait_addr_ok;
 reg wait_data_ok;
-always @(posedge clk) begin
-  if (reset) begin
-    // reset
-    wait_addr_ok <= 1'b0;
-  end
-  else if(data_sram_req && data_sram_addr_ok)
-    wait_addr_ok <= 1'b0;
-  else if (data_sram_req) begin
-    wait_addr_ok <= 1'b1;
-  end
-end
+
 always @(posedge clk ) begin
   if (reset) begin
     // reset
@@ -324,10 +313,10 @@ end
 assign data_sram_size = (es_mem_op_w | es_mem_op_wl&(addr_offset2|addr_offset3) | es_mem_op_wr&(addr_offset0|addr_offset1))?2'h2
                         : (es_mem_op_h | es_mem_op_hu | es_mem_op_wl&addr_offset1 | es_mem_op_wr&addr_offset2)?2'h1:2'h0;
 assign data_sram_wr = es_mem_we;
-assign data_sram_wstrb   = {4{es_mem_we&es_valid&!cancel&!(es_valid&es_excp_valid | (ms_excp_valid|ms_inst_eret) & out_ms_valid |(ws_excp_valid|ws_inst_eret) & out_ws_valid)}}&({4{es_mem_op_b}}&sb_wen | {4{es_mem_op_h}}&sh_wen | {4{es_mem_op_wr}}&swr_wen | {4{es_mem_op_wl}}&swl_wen | {4{es_mem_op_w}}) ;
+assign data_sram_wstrb   = {4{es_mem_we&es_valid&!eret_flush&!cancel&!(es_valid&es_excp_valid | (ms_excp_valid|ms_inst_eret) & out_ms_valid |(ws_excp_valid|ws_inst_eret) & out_ws_valid)}}&({4{es_mem_op_b}}&sb_wen | {4{es_mem_op_h}}&sh_wen | {4{es_mem_op_wr}}&swr_wen | {4{es_mem_op_wl}}&swl_wen | {4{es_mem_op_w}}) ;
 assign data_sram_addr  = (es_mem_op_wl)? {es_alu_result[31:2],2'b0} : es_alu_result;
 assign data_sram_wdata = {32{es_mem_op_b|es_mem_op_h|es_mem_op_w}}&st_bhw_wdata | {32{es_mem_op_wr}}&st_wr_wdata | {32{es_mem_op_wl}}&st_wl_wdata;
-assign data_sram_req = !req_flag & !wait_data_ok & es_valid & ms_allowin&(es_mem_we|es_load_op);
+assign data_sram_req = !req_flag & !wait_data_ok & es_valid & ms_allowin&(es_mem_we|es_load_op)&!eret_flush;
 wire [31:0] signed_divisor_tdata,signed_dividend_tdata;
 wire [31:0] unsigned_divisor_tdata,unsigned_dividend_tdata;
 wire [63:0] signed_dout_tdata,unsigned_dout_tdata;
@@ -423,8 +412,8 @@ assign lo_wdata = {32{es_mul_sel}}&es_lo | {32{es_div_sel[1]}}&signed_quotient |
 				  {32{es_div_sel[0]}}&unsigned_quotient | {32{es_mtlo}}&es_rs_value ;
 assign hi_wdata = {32{es_mul_sel}}&es_hi | {32{es_div_sel[1]}}&signed_remainder | 
 				  {32{es_div_sel[0]}}&unsigned_remainder | {32{es_mthi}}&es_rs_value ;
-assign hi_we = es_valid&(es_mul_sel|es_div_sel[1]|es_div_sel[0]|es_mthi)&!(es_valid&es_excp_valid | (ms_excp_valid|ms_inst_eret) & out_ms_valid |(ws_excp_valid|ws_inst_eret) & out_ws_valid);
-assign lo_we = es_valid&(es_mul_sel|es_div_sel[1]|es_div_sel[0]|es_mtlo)&!(es_valid&es_excp_valid | (ms_excp_valid|ms_inst_eret) & out_ms_valid |(ws_excp_valid|ws_inst_eret) & out_ws_valid);
+assign hi_we = es_valid&!eret_flush&(es_mul_sel|es_div_sel[1]|es_div_sel[0]|es_mthi)&!(es_valid&es_excp_valid | (ms_excp_valid|ms_inst_eret) & out_ms_valid |(ws_excp_valid|ws_inst_eret) & out_ws_valid);
+assign lo_we = es_valid&!eret_flush&(es_mul_sel|es_div_sel[1]|es_div_sel[0]|es_mtlo)&!(es_valid&es_excp_valid | (ms_excp_valid|ms_inst_eret) & out_ms_valid |(ws_excp_valid|ws_inst_eret) & out_ws_valid);
 
 HI_LO u_HI_LO(
 	.clk(clk),

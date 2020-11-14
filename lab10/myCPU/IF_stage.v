@@ -59,7 +59,7 @@ always @(posedge clk) begin
         // reset
         br_bus_r <= 0;
     end
-    else if (make_bd) begin
+    else if (make_bd || !make_bd&&(br_stall_r==0 && br_stall)) begin
         br_bus_r <= br_bus;        
     end
     else if (!br_bus_valid & inst_sram_data_ok) begin
@@ -75,6 +75,19 @@ always @(posedge clk) begin
     end
     else if (make_bd)begin
         bd_done <= 1'b0;
+    end
+end
+reg br_stall_r;
+always @(posedge clk ) begin
+    if (reset) begin
+        // reset
+        br_stall_r <= 1'b0;
+    end
+    else if (make_bd ) begin
+        br_stall_r <= br_stall;
+    end
+    else if (br_stall_r==0 && br_stall) begin
+        br_stall_r <= br_stall;
     end
 end
 assign {make_bd,br_stall,br_taken,br_target} =br_bus;
@@ -157,7 +170,7 @@ always @(posedge clk) begin
         req_flag <= 1'b1;
     end
 end
-assign inst_sram_req = to_fs_valid & fs_allowin & !req_flag;
+assign inst_sram_req = to_fs_valid & fs_allowin & !req_flag ;
 assign inst_sram_addr  = nextpc;
 assign inst_sram_wr = 1'b0;
 assign inst_sram_size = 2'h2;
