@@ -8,9 +8,9 @@ module sram_to_axi_bridge (
     input [ 3:0] inst_sram_wstrb,
     input [31:0] inst_sram_addr,
     input [31:0] inst_sram_wdata,
-    output       inst_sram_addr_ok, //TODO
-    output       inst_sram_data_ok, //TODO
-    output[31:0] inst_sram_rdata,   //TODO
+    output       inst_sram_addr_ok, 
+    output       inst_sram_data_ok, 
+    output[31:0] inst_sram_rdata,   
     // slave: data sram interface
     input        data_sram_req,
     input        data_sram_wr,
@@ -18,9 +18,9 @@ module sram_to_axi_bridge (
     input [ 3:0] data_sram_wstrb,
     input [31:0] data_sram_addr,
     input [31:0] data_sram_wdata,
-    output       data_sram_addr_ok, //TODO
-    output       data_sram_data_ok, //TODO
-    output[31:0] data_sram_rdata,   //TODO
+    output       data_sram_addr_ok, 
+    output       data_sram_data_ok, 
+    output[31:0] data_sram_rdata,   
     // master: axi interface
     //read request
     output [3:0]    arid      ,
@@ -64,12 +64,43 @@ module sram_to_axi_bridge (
     input           bvalid    ,
     output          bready    
 );
-// reg          inst_sram_addr_ok_r;//?
-// reg          inst_sram_data_ok_r;//?
-// reg   [31:0] inst_sram_rdata_r;
-// reg          data_sram_addr_ok_r;//?
-// reg          data_sram_data_ok_r;//?
-// reg   [31:0] data_sram_rdata_r;
+reg wdata_ok_r; //b handshake, 1 cycle length
+reg rdata_ok_r; //same as rdata_r
+reg waddr_ok_r; //same as awaddr_r (combines size\wdata\wstrb)
+reg raddr_ok_r; //same as araddr_r
+assign inst_sram_data_ok = rdata_ok_r && rid_r==4'b0;
+assign data_sram_data_ok = rdata_ok_r && rid_r==4'b1 || wdata_ok_r;
+assign data_sram_rdata   = rdata_r;
+assign inst_sram_rdata   = rdata_r;
+assign inst_sram_addr_ok = raddr_ok_r &&arid_r==4'b0;
+assign data_sram_addr_ok = raddr_ok_r &&arid_r==4'b1 || waddr_ok_r;
+always@(posedge clk) begin
+    if(r_state==R_WV) begin
+        if(rvalid&&rready)  rdata_ok_r<=1;
+    end
+    else                    rdata_ok_r<=0;
+end
+always@(posedge clk) begin
+    if(ar_state==AR_Q) begin
+        if(inst_sram_req && !inst_sram_wr)
+                            raddr_ok_r<=1;
+    end
+    else                    raddr_ok_r<=0;
+end
+always@(posedge clk) begin
+    if(aw_state==AW_Q) begin
+        if(data_sram_req && data_sram_wr)
+                            waddr_ok_r<=1;
+    end
+    else                    waddr_ok_r<=0;
+end
+always@(posedge clk) begin
+    if(b_state==B_WAIT) begin
+        if(bvalid&&bready)  wdata_ok_r<=1;
+        else                wdata_ok_r<=0;
+    end
+    else                    wdata_ok_r<=0;
+end
 
 //read request
 reg [3:0]    arid_r      ;
@@ -92,9 +123,9 @@ reg          arvalid_r   ;
 	always@(*) begin
 		case(ar_state)
         AR_Q:begin
-            if(data_sram_req&&!data_sram_wr)
+            if      (data_sram_req && !data_sram_wr)
                     ar_nextstate<=AR_DHS;
-            else if(inst_sram_req&&!inst_sram_wr)
+            else if (inst_sram_req && !inst_sram_wr)
                     ar_nextstate<=AR_IHS;
             else    ar_nextstate<=AR_Q;
         end
@@ -131,27 +162,17 @@ assign rnw_block = baddr_r==araddr && (wready && wvalid);
 	end
     always@(posedge clk) begin
         if(ar_state==AR_Q) begin
-            if(data_sram_req && !data_sram_wr)
+            if      (data_sram_req && !data_sram_wr) begin
                 arsize_r<=data_sram_size;
-            else if(inst_sram_req && !inst_sram_wr)
-                arsize_r<=inst_sram_size;
-        end 
-    end
-    always@(posedge clk) begin
-        if(ar_state==AR_Q) begin
-            if(data_sram_req && !data_sram_wr)
                 araddr_r<=data_sram_addr;
-            else if(inst_sram_req && !inst_sram_wr)
-                araddr_r<=inst_sram_addr;
-        end 
-    end
-    always@(posedge clk) begin
-        if(ar_state==AR_Q) begin
-            if(data_sram_req && !data_sram_wr)
                 arid_r<=4'd1;
-            else if(inst_sram_req && !inst_sram_wr)
+            end
+            else if (inst_sram_req && !inst_sram_wr) begin
+                arsize_r<=inst_sram_size;
+                araddr_r<=inst_sram_addr;
                 arid_r<=4'd0;
-        end
+            end
+        end 
     end
 // */
 assign       arlen  = 8'b0;
@@ -218,7 +239,7 @@ reg          wvalid_r    ;
     always@(*) begin
         case(aw_state)
         AW_Q:begin
-            if(data_sram_req&&data_sram_wr)
+            if(data_sram_req && data_sram_wr)
                     aw_nextstate<=AW_HS;
             else    aw_nextstate<=AW_Q;
         end
