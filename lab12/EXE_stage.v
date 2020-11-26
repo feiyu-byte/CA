@@ -213,7 +213,13 @@ assign es_to_ds_fw_bus = {es_gr_we    ,  //37:37
                          };
 wire div_block;
 assign div_block = (es_div_sel[1]&~signed_dout_tvalid | es_div_sel[0]&~unsigned_dout_tvalid);
-assign es_ready_go    = !div_block & (!es_mem_we | es_mem_we & data_sram_data_ok) & (!es_load_op | es_load_op & data_sram_req & data_sram_addr_ok);
+assign es_ready_go    = 
+(
+    !div_block 
+  & (!es_mem_we | es_mem_we & data_sram_data_ok) 
+  & (!es_load_op | es_load_op & data_sram_req & data_sram_addr_ok)
+) | (unalgn_load_op|unalgn_mem_we)  //special case: AdEL\S excp
+;
 assign es_allowin     = !es_valid || es_ready_go && ms_allowin;
 assign es_to_ms_valid =  es_valid && es_ready_go;
 
@@ -316,7 +322,15 @@ assign data_sram_wr = es_mem_we;
 assign data_sram_wstrb   = {4{es_mem_we&es_valid&!eret_flush&!cancel&!(es_valid&es_excp_valid | (ms_excp_valid|ms_inst_eret) & out_ms_valid |(ws_excp_valid|ws_inst_eret) & out_ws_valid)}}&({4{es_mem_op_b}}&sb_wen | {4{es_mem_op_h}}&sh_wen | {4{es_mem_op_wr}}&swr_wen | {4{es_mem_op_wl}}&swl_wen | {4{es_mem_op_w}}) ;
 assign data_sram_addr  = (es_mem_op_wl)? {es_alu_result[31:2],2'b0} : es_alu_result;
 assign data_sram_wdata = {32{es_mem_op_b|es_mem_op_h|es_mem_op_w}}&st_bhw_wdata | {32{es_mem_op_wr}}&st_wr_wdata | {32{es_mem_op_wl}}&st_wl_wdata;
-assign data_sram_req = !req_flag & !wait_data_ok & es_valid & ms_allowin&(es_mem_we|es_load_op)&!eret_flush;
+assign data_sram_req = 
+  !req_flag 
+& !wait_data_ok 
+& es_valid 
+& ms_allowin
+& (es_mem_we|es_load_op)
+& !eret_flush
+& !(unalgn_mem_we|unalgn_load_op)
+;
 wire [31:0] signed_divisor_tdata,signed_dividend_tdata;
 wire [31:0] unsigned_divisor_tdata,unsigned_dividend_tdata;
 wire [63:0] signed_dout_tdata,unsigned_dout_tdata;

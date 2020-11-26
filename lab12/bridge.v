@@ -64,6 +64,7 @@ module sram_to_axi_bridge (
     input           bvalid    ,
     output          bready    
 );
+//TODO: check if all FSM nextstate assigned
 reg wdata_ok_r; //b handshake, 1 cycle length
 reg rdata_ok_r; //same as rdata_r
 reg waddr_ok_r; //same as awaddr_r (combines size\wdata\wstrb)
@@ -82,7 +83,9 @@ always@(posedge clk) begin
 end
 always@(posedge clk) begin
     if(ar_state==AR_Q) begin
-        if(inst_sram_req && !inst_sram_wr)
+        if      (inst_sram_req && !inst_sram_wr)
+                            raddr_ok_r<=1;
+        else if (data_sram_req && !data_sram_wr)
                             raddr_ok_r<=1;
     end
     else                    raddr_ok_r<=0;
@@ -107,6 +110,10 @@ reg [3:0]    arid_r      ;
 reg [31:0]   araddr_r    ;
 reg [2:0]    arsize_r    ;
 reg          arvalid_r   ;
+assign      arid       = arid_r      ;
+assign      araddr     = araddr_r    ;
+assign      arsize     = arsize_r    ;
+assign      arvalid    = arvalid_r   ;
 // /****PART 1
 	parameter AR_Q      = 2'b00;    //WAIT REQ
 	parameter AR_DHS    = 2'b01;    //DATA HANDSHAKE
@@ -142,10 +149,6 @@ reg          arvalid_r   ;
 	end
 // */
 // /****PART 3
-// reg [3:0]    arid_r      ;
-// reg [31:0]   araddr_r    ;
-// reg [2:0]    arsize_r    ;
-// reg          arvalid_r   ;
 wire raw_block; //ar_transaction->addr==unfinished w_transaction->addr
 wire rnw_block; //ar_transaction->addr==current w_transaction->addr
 assign raw_block = baddr_r==araddr && b_state==B_WAIT;
@@ -153,10 +156,9 @@ assign rnw_block = baddr_r==araddr && (wready && wvalid);
 	always@(posedge clk) begin
 		if(reset)       arvalid_r<=0;
         else if(ar_state==AR_DHS || ar_state==AR_IHS) begin
-            if(raw_block || rnw_block)   
-                            arvalid_r<=0;
-            else if(arready)arvalid_r<=0;
-            else            arvalid_r<=1;
+            if(raw_block || rnw_block)  arvalid_r<=0;
+            else if(arready&&arvalid)   arvalid_r<=0;
+            else                        arvalid_r<=1;
         end
         else            arvalid_r<=0;
 	end
@@ -183,6 +185,7 @@ assign       arprot = 3'b0;
 
 //read response
 reg          rready_r    ;
+assign      rready = rready_r;
 	parameter R_WV      = 2'b00;    //WAIT VALID
     parameter R_WB      = 2'b01;    //WRITE BACK TO CPU
 	reg [1:0] r_state;
@@ -194,8 +197,8 @@ reg          rready_r    ;
     always@(*) begin
         case(r_state)
         R_WV:begin
-            if(rvalid&&rready)  r_state<=R_WB;
-            else                r_state<=R_WV;
+            if(rvalid&&rready)  r_nextstate<=R_WB;
+            else                r_nextstate<=R_WV;
         end
         R_WB:   r_nextstate<=R_WV;
         default:r_nextstate<=R_WV;
@@ -203,13 +206,13 @@ reg          rready_r    ;
     end
     always@(posedge clk) begin
         if(r_state==R_WV) begin
-            if(rvalid)      rready_r<=0;
-            else            rready_r<=1;
+            if(rvalid&&rready)  rready_r<=0;
+            else                rready_r<=1;
         end
         else                rready_r<=0;
     end
 //rdata related
-reg          rid_r       ;
+reg [3:0]    rid_r       ;
 reg [31:0]   rdata_r     ;
 always@(posedge clk) begin
     if(r_state==R_WV) begin
@@ -227,6 +230,12 @@ reg          awvalid_r   ;
 reg [31:0]   wdata_r     ;
 reg [3:0]    wstrb_r     ;
 reg          wvalid_r    ;
+assign awaddr = awaddr_r;
+assign awsize = awsize_r;
+assign awvalid= awvalid_r;
+assign wdata  = wdata_r;
+assign wstrb  = wstrb_r;
+assign wvalid = wvalid_r;
 	parameter AW_Q      = 2'b00;    //WAIT REQ
     parameter AW_HS     = 2'b01;    //HANDSHAKE(ONLY DATA)
     parameter AW_W      = 2'b10;    //WRITE
@@ -257,16 +266,16 @@ reg          wvalid_r    ;
 always@(posedge clk) begin
     if(reset)       awvalid_r<=0;
     else if(aw_state==AW_HS) begin
-        if(awready) awvalid_r<=0;
-        else        awvalid_r<=1;
+        if(awready&&awvalid)    awvalid_r<=0;
+        else                    awvalid_r<=1;
     end
     else            awvalid_r<=0;
 end
 always@(posedge clk) begin
     if(reset)       wvalid_r<=0;
     else if(aw_state==AW_W) begin
-        if(wready)  wvalid_r<=0;
-        else        wvalid_r<=1;
+        if(wready&&wvalid)  wvalid_r<=0;
+        else                wvalid_r<=1;
     end
     else            wvalid_r<=0;
 end
@@ -292,6 +301,7 @@ assign       wlast  =1'b1;
 
 //write response
 reg         bready_r;   //record addr of last AW TRANSACTION(data only)
+assign bready = bready_r;
 reg [31:0]  baddr_r;
 	parameter B_FIN     = 2'b00;    //FINISHED
     parameter B_WAIT    = 2'b01;    //WAIT FOR RESPONSE
@@ -316,8 +326,8 @@ reg [31:0]  baddr_r;
     end
 always@(posedge clk) begin
     if(b_state==B_WAIT) begin
-        if(bvalid)  bready_r<=0;
-        else        bready_r<=1;
+        if(bvalid&&bready)  bready_r<=0;
+        else                bready_r<=1;
     end
     else            bready_r<=0;
 end

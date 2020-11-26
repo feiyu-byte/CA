@@ -1,4 +1,5 @@
 module mycpu_top(
+    input    int       ,   //never used
     input    aclk      ,
     input    aresetn   ,   //low active
     //read request
@@ -135,6 +136,7 @@ id_stage id_stage(
     .out_es_valid   (out_es_valid   ),
     .out_ms_valid   (out_ms_valid   ),
     .out_ws_valid   (out_ws_valid   ),
+    .ms_res_from_mem(ms_res_from_mem),
     //to es
     .ds_to_es_valid (ds_to_es_valid ),
     .ds_to_es_bus   (ds_to_es_bus   ),
@@ -182,6 +184,7 @@ exe_stage exe_stage(
     .data_sram_data_ok(data_sram_data_ok)
 );
 // MEM stage
+wire ms_res_from_mem;
 mem_stage mem_stage(
     .clk            (aclk            ),
     .reset          (reset          ),
@@ -195,10 +198,11 @@ mem_stage mem_stage(
     //forward
     .ms_to_ds_fw_bus(ms_to_ds_fw_bus),
     .out_ms_valid   (out_ms_valid   ),
-    .ms_inst_eret   (ms_inst_eret   ),
+    .ms_res_from_mem(ms_res_from_mem),
     //to ws
     .ms_to_ws_valid (ms_to_ws_valid ),
     .ms_to_ws_bus   (ms_to_ws_bus   ),
+    .ms_inst_eret   (ms_inst_eret   ),
     //from cp0
     .cp0_general_bus(cp0_general_bus),
     //from data-sram

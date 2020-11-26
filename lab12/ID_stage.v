@@ -25,6 +25,7 @@ module id_stage(
     input                          out_es_valid,
     input                          out_ms_valid,
     input                          out_ws_valid,
+    input                          ms_res_from_mem,
     //to es
     output                         ds_to_es_valid,
     output [`DS_TO_ES_BUS_WD -1:0] ds_to_es_bus  ,
@@ -318,10 +319,17 @@ wire ms_forward;
 wire ld_block;
 wire mfc0_block;
 assign mfc0_block     = es_to_ms_bus[116]&out_es_valid | ms_to_ws_bus[76]&out_ms_valid;
-assign ld_block       = es_to_ms_bus[70]&out_es_valid;
+assign ld_block       = es_to_ms_bus[70]&out_es_valid  | ms_res_from_mem&out_ms_valid;
 assign es_forward     = ((rf_raddr1==es_addr&&rf_raddr1!=0)|(rf_raddr2==es_addr&&rf_raddr2!=0));
 assign ms_forward     = ((rf_raddr1==ms_addr&&rf_raddr1!=0)|(rf_raddr2==ms_addr&&rf_raddr2!=0));
-assign ds_ready_go    =  !(ld_block& es_forward | mfc0_block & (es_forward|ms_forward))|inst_mflo|inst_mfhi;/*& (!(es_excp_valid& out_es_valid |ms_excp_valid & out_ms_valid |ws_excp_valid & out_ws_valid))*/
+assign ds_ready_go    =  
+!(
+    ld_block   & (es_forward|ms_forward)//block1: unfinished load in es|ms
+  | mfc0_block & (es_forward|ms_forward)//block2: unfinished mfco in es|ms
+)
+|inst_mflo
+|inst_mfhi;
+/*& (!(es_excp_valid& out_es_valid |ms_excp_valid & out_ms_valid |ws_excp_valid & out_ws_valid))*/
 assign ds_allowin     = !ds_valid || ds_ready_go && es_allowin;
 assign ds_to_es_valid = ds_valid && ds_ready_go;
 reg bd_flag;

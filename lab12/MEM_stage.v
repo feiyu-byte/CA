@@ -13,6 +13,7 @@ module mem_stage(
     //forward
     output [`FW_BUS_WD       -1:0] ms_to_ds_fw_bus,
     output                         out_ms_valid,
+    output                         ms_res_from_mem,
     //to ws
     output                         ms_to_ws_valid,
     output [`MS_TO_WS_BUS_WD -1:0] ms_to_ws_bus  ,
@@ -141,7 +142,11 @@ assign ms_to_ds_fw_bus ={ms_gr_we,      //37:37
                         ms_dest,        //36:32
                         ms_final_result  //31:0
                         };
-assign ms_ready_go    = !ms_res_from_mem | ms_res_from_mem & data_sram_data_ok;
+assign ms_ready_go    = 
+    !ms_res_from_mem 
+|   ms_res_from_mem&data_sram_data_ok
+|   ms_excp_valid   //special case: valid exception
+;
 assign ms_allowin     = !ms_valid || ms_ready_go && ws_allowin;
 assign ms_to_ws_valid = ms_valid && ms_ready_go ;
 

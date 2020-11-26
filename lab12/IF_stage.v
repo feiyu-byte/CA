@@ -95,13 +95,15 @@ assign {make_bd,br_stall,br_taken,br_target} =br_bus;
 wire       fs_excp_valid;
 wire [6:2] fs_excp_execode;
 wire [31:0]fs_excp_bvaddr;
+wire       unalgn_inst_load_op;
+assign     unalgn_inst_load_op = fs_pc[1:0]!=2'b0;
 //exception cause: add here
 assign fs_excp_valid = 
                   (reset || cp0_status_EXL)     ? 1'h0   :
-                  (fs_pc[1:0]!=2'b0)            ? 1'h1:1'h0;
+                  (unalgn_inst_load_op)         ? 1'h1:1'h0;
 assign fs_excp_execode = 
                   (reset || cp0_status_EXL)     ? 5'h00  :
-                  (fs_pc[1:0]!=2'b0)            ? `EX_ADEL  :
+                  (unalgn_inst_load_op)         ? `EX_ADEL  :
                   5'h00;
 assign fs_excp_bvaddr = fs_pc;
 
@@ -132,7 +134,11 @@ assign seq_pc       = fs_pc + 3'h4;
 assign nextpc       = (br_bus_r[32]&br_bus_r[33]&!(make_bd&!fs_valid)&bd_done&br_bus_valid&!cancel) ? br_bus_r[31:0] :seq_pc; 
 
 // IF stage
-assign fs_ready_go    = inst_sram_data_ok| inst_valid; //& !(br_bus_valid & !to_fs_ready_go);
+assign fs_ready_go    = 
+    inst_sram_data_ok
+|   inst_valid
+; 
+//& !(br_bus_valid & !to_fs_ready_go);
 assign fs_allowin     = !fs_valid|| fs_ready_go && ds_allowin;
 assign fs_to_ds_valid =  fs_ready_go && fs_valid;
 always @(posedge clk) begin
@@ -170,8 +176,12 @@ always @(posedge clk) begin
         req_flag <= 1'b1;
     end
 end
-assign inst_sram_req = to_fs_valid & fs_allowin & !req_flag ;
-assign inst_sram_addr  = nextpc;
+assign inst_sram_req = 
+    to_fs_valid 
+&   fs_allowin 
+&   !req_flag 
+;
+assign inst_sram_addr  = {nextpc[31:2],2'b0};
 assign inst_sram_wr = 1'b0;
 assign inst_sram_size = 2'h2;
 assign inst_sram_wstrb = 4'h0;
