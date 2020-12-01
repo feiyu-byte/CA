@@ -1,0 +1,99 @@
+Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
+------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
+| Date         : Wed Dec  2 01:20:14 2020
+| Host         : DESKTOP-9TJ4F4D running 64-bit major release  (build 9200)
+| Command      : report_control_sets -verbose -file tlb_top_control_sets_placed.rpt
+| Design       : tlb_top
+| Device       : xc7a200t
+------------------------------------------------------------------------------------
+
+Control Set Information
+
+Table of Contents
+-----------------
+1. Summary
+2. Histogram
+3. Flip-Flop Distribution
+4. Detailed Control Set Information
+
+1. Summary
+----------
+
++----------------------------------------------------------+-------+
+|                          Status                          | Count |
++----------------------------------------------------------+-------+
+| Total control sets                                       |    21 |
+|    Minimum number of control sets                        |    21 |
+|    Addition due to synthesis replication                 |     0 |
+|    Addition due to physical synthesis replication        |     0 |
+| Unused register locations in slices containing registers |   134 |
++----------------------------------------------------------+-------+
+* Control sets can be merged at opt_design using control_set_merge or merge_equivalent_drivers
+** Run report_qor_suggestions for automated merging and remapping suggestions
+
+
+2. Histogram
+------------
+
++--------------------+-------+
+|       Fanout       | Count |
++--------------------+-------+
+| Total control sets |    21 |
+| >= 0 to < 4        |     0 |
+| >= 4 to < 6        |     3 |
+| >= 6 to < 8        |     0 |
+| >= 8 to < 10       |    16 |
+| >= 10 to < 12      |     0 |
+| >= 12 to < 14      |     0 |
+| >= 14 to < 16      |     0 |
+| >= 16              |     2 |
++--------------------+-------+
+* Control sets can be remapped at either synth_design or opt_design
+
+
+3. Flip-Flop Distribution
+-------------------------
+
++--------------+-----------------------+------------------------+-----------------+--------------+
+| Clock Enable | Synchronous Set/Reset | Asynchronous Set/Reset | Total Registers | Total Slices |
++--------------+-----------------------+------------------------+-----------------+--------------+
+| No           | No                    | No                     |               0 |            0 |
+| No           | No                    | Yes                    |               0 |            0 |
+| No           | Yes                   | No                     |              70 |           19 |
+| Yes          | No                    | No                     |             144 |           59 |
+| Yes          | No                    | Yes                    |               0 |            0 |
+| Yes          | Yes                   | No                     |              12 |            3 |
++--------------+-----------------------+------------------------+-----------------+--------------+
+
+
+4. Detailed Control Set Information
+-----------------------------------
+
++------------------------+-----------------------------+------------------+------------------+----------------+
+|      Clock Signal      |        Enable Signal        | Set/Reset Signal | Slice Load Count | Bel Load Count |
++------------------------+-----------------------------+------------------+------------------+----------------+
+|  clk_pll/inst/clk_out1 | tlb/tlb_s_cnt_reg[1][0]     | clear            |                1 |              4 |
+|  clk_pll/inst/clk_out1 | tlb_w_cnt[3]_i_1_n_0        | clear            |                1 |              4 |
+|  clk_pll/inst/clk_out1 | tlb/E[0]                    | clear            |                1 |              4 |
+|  clk_pll/inst/clk_out1 | tlb/tlb_vpn2[10][8]_i_1_n_0 |                  |                3 |              9 |
+|  clk_pll/inst/clk_out1 | tlb/tlb_vpn2[3][8]_i_1_n_0  |                  |                3 |              9 |
+|  clk_pll/inst/clk_out1 | tlb/tlb_vpn2[11][8]_i_1_n_0 |                  |                5 |              9 |
+|  clk_pll/inst/clk_out1 | tlb/tlb_vpn2[12][8]_i_1_n_0 |                  |                4 |              9 |
+|  clk_pll/inst/clk_out1 | tlb/tlb_vpn2[1][8]_i_1_n_0  |                  |                3 |              9 |
+|  clk_pll/inst/clk_out1 | tlb/tlb_vpn2[5][8]_i_1_n_0  |                  |                3 |              9 |
+|  clk_pll/inst/clk_out1 | tlb/tlb_vpn2[6][8]_i_1_n_0  |                  |                4 |              9 |
+|  clk_pll/inst/clk_out1 | tlb/tlb_vpn2[7][8]_i_1_n_0  |                  |                3 |              9 |
+|  clk_pll/inst/clk_out1 | tlb/tlb_vpn2[15][8]_i_1_n_0 |                  |                5 |              9 |
+|  clk_pll/inst/clk_out1 | tlb/tlb_vpn2[8][8]_i_1_n_0  |                  |                3 |              9 |
+|  clk_pll/inst/clk_out1 | tlb/tlb_vpn2[9][8]_i_1_n_0  |                  |                4 |              9 |
+|  clk_pll/inst/clk_out1 | tlb/tlb_vpn2[2][8]_i_1_n_0  |                  |                4 |              9 |
+|  clk_pll/inst/clk_out1 | tlb/tlb_vpn2[13][8]_i_1_n_0 |                  |                4 |              9 |
+|  clk_pll/inst/clk_out1 | tlb/tlb_vpn2[14][8]_i_1_n_0 |                  |                3 |              9 |
+|  clk_pll/inst/clk_out1 | tlb/tlb_vpn2[4][8]_i_1_n_0  |                  |                4 |              9 |
+|  clk_pll/inst/clk_out1 | tlb/tlb_vpn2[0][8]_i_1_n_0  |                  |                4 |              9 |
+|  clk_pll/inst/clk_out1 |                             | wait_cnt0        |                7 |             27 |
+|  clk_pll/inst/clk_out1 |                             | clear            |               12 |             43 |
++------------------------+-----------------------------+------------------+------------------+----------------+
+
+

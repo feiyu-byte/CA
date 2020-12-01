@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="testbench_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="glbl" />
+            <top_module name="testbench" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="5502833fs"></ZoomStartTime>
+      <ZoomEndTime time="5637434fs"></ZoomEndTime>
+      <Cursor1Time time="5615000fs"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="181"></NameColumnWidth>
+      <ValueColumnWidth column_width="90"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="75" />
+   <wvobject fp_name="/testbench/resetn" type="logic">
+      <obj_property name="ElementShortName">resetn</obj_property>
+      <obj_property name="ObjectShortName">resetn</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/clk" type="logic">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/w_ok_r" type="logic">
+      <obj_property name="ElementShortName">w_ok_r</obj_property>
+      <obj_property name="ObjectShortName">w_ok_r</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/r_ok_r" type="logic">
+      <obj_property name="ElementShortName">r_ok_r</obj_property>
+      <obj_property name="ObjectShortName">r_ok_r</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/s_ok_r" type="logic">
+      <obj_property name="ElementShortName">s_ok_r</obj_property>
+      <obj_property name="ObjectShortName">s_ok_r</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/clk" type="logic">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/s0_vpn2" type="array">
+      <obj_property name="ElementShortName">s0_vpn2[18:0]</obj_property>
+      <obj_property name="ObjectShortName">s0_vpn2[18:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/s0_odd_page" type="logic">
+      <obj_property name="ElementShortName">s0_odd_page</obj_property>
+      <obj_property name="ObjectShortName">s0_odd_page</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/s0_asid" type="array">
+      <obj_property name="ElementShortName">s0_asid[7:0]</obj_property>
+      <obj_property name="ObjectShortName">s0_asid[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/s0_found" type="logic">
+      <obj_property name="ElementShortName">s0_found</obj_property>
+      <obj_property name="ObjectShortName">s0_found</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/s0_index" type="array">
+      <obj_property name="ElementShortName">s0_index[3:0]</obj_property>
+      <obj_property name="ObjectShortName">s0_index[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/s0_pfn" type="array">
+      <obj_property name="ElementShortName">s0_pfn[19:0]</obj_property>
+      <obj_property name="ObjectShortName">s0_pfn[19:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/s0_c" type="array">
+      <obj_property name="ElementShortName">s0_c[2:0]</obj_property>
+      <obj_property name="ObjectShortName">s0_c[2:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/s0_d" type="logic">
+      <obj_property name="ElementShortName">s0_d</obj_property>
+      <obj_property name="ObjectShortName">s0_d</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/s0_v" type="logic">
+      <obj_property name="ElementShortName">s0_v</obj_property>
+      <obj_property name="ObjectShortName">s0_v</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/s1_vpn2" type="array">
+      <obj_property name="ElementShortName">s1_vpn2[18:0]</obj_property>
+      <obj_property name="ObjectShortName">s1_vpn2[18:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/s1_odd_page" type="logic">
+      <obj_property name="ElementShortName">s1_odd_page</obj_property>
+      <obj_property name="ObjectShortName">s1_odd_page</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/s1_asid" type="array">
+      <obj_property name="ElementShortName">s1_asid[7:0]</obj_property>
+      <obj_property name="ObjectShortName">s1_asid[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/s1_found" type="logic">
+      <obj_property name="ElementShortName">s1_found</obj_property>
+      <obj_property name="ObjectShortName">s1_found</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/s1_index" type="array">
+      <obj_property name="ElementShortName">s1_index[3:0]</obj_property>
+      <obj_property name="ObjectShortName">s1_index[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/s1_pfn" type="array">
+      <obj_property name="ElementShortName">s1_pfn[19:0]</obj_property>
+      <obj_property name="ObjectShortName">s1_pfn[19:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/s1_c" type="array">
+      <obj_property name="ElementShortName">s1_c[2:0]</obj_property>
+      <obj_property name="ObjectShortName">s1_c[2:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/s1_d" type="logic">
+      <obj_property name="ElementShortName">s1_d</obj_property>
+      <obj_property name="ObjectShortName">s1_d</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/s1_v" type="logic">
+      <obj_property name="ElementShortName">s1_v</obj_property>
+      <obj_property name="ObjectShortName">s1_v</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/we" type="logic">
+      <obj_property name="ElementShortName">we</obj_property>
+      <obj_property name="ObjectShortName">we</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/w_index" type="array">
+      <obj_property name="ElementShortName">w_index[3:0]</obj_property>
+      <obj_property name="ObjectShortName">w_index[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/w_vpn2" type="array">
+      <obj_property name="ElementShortName">w_vpn2[18:0]</obj_property>
+      <obj_property name="ObjectShortName">w_vpn2[18:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/w_asid" type="array">
+      <obj_property name="ElementShortName">w_asid[7:0]</obj_property>
+      <obj_property name="ObjectShortName">w_asid[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/w_g" type="logic">
+      <obj_property name="ElementShortName">w_g</obj_property>
+      <obj_property name="ObjectShortName">w_g</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/w_pfn0" type="array">
+      <obj_property name="ElementShortName">w_pfn0[19:0]</obj_property>
+      <obj_property name="ObjectShortName">w_pfn0[19:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/w_c0" type="array">
+      <obj_property name="ElementShortName">w_c0[2:0]</obj_property>
+      <obj_property name="ObjectShortName">w_c0[2:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/w_d0" type="logic">
+      <obj_property name="ElementShortName">w_d0</obj_property>
+      <obj_property name="ObjectShortName">w_d0</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/w_v0" type="logic">
+      <obj_property name="ElementShortName">w_v0</obj_property>
+      <obj_property name="ObjectShortName">w_v0</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/w_pfn1" type="array">
+      <obj_property name="ElementShortName">w_pfn1[19:0]</obj_property>
+      <obj_property name="ObjectShortName">w_pfn1[19:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/w_c1" type="array">
+      <obj_property name="ElementShortName">w_c1[2:0]</obj_property>
+      <obj_property name="ObjectShortName">w_c1[2:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/w_d1" type="logic">
+      <obj_property name="ElementShortName">w_d1</obj_property>
+      <obj_property name="ObjectShortName">w_d1</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/w_v1" type="logic">
+      <obj_property name="ElementShortName">w_v1</obj_property>
+      <obj_property name="ObjectShortName">w_v1</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/r_index" type="array">
+      <obj_property name="ElementShortName">r_index[3:0]</obj_property>
+      <obj_property name="ObjectShortName">r_index[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/r_vpn2" type="array">
+      <obj_property name="ElementShortName">r_vpn2[18:0]</obj_property>
+      <obj_property name="ObjectShortName">r_vpn2[18:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/r_asid" type="array">
+      <obj_property name="ElementShortName">r_asid[7:0]</obj_property>
+      <obj_property name="ObjectShortName">r_asid[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/r_g" type="logic">
+      <obj_property name="ElementShortName">r_g</obj_property>
+      <obj_property name="ObjectShortName">r_g</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/r_pfn0" type="array">
+      <obj_property name="ElementShortName">r_pfn0[19:0]</obj_property>
+      <obj_property name="ObjectShortName">r_pfn0[19:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/r_c0" type="array">
+      <obj_property name="ElementShortName">r_c0[2:0]</obj_property>
+      <obj_property name="ObjectShortName">r_c0[2:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/r_d0" type="logic">
+      <obj_property name="ElementShortName">r_d0</obj_property>
+      <obj_property name="ObjectShortName">r_d0</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/r_v0" type="logic">
+      <obj_property name="ElementShortName">r_v0</obj_property>
+      <obj_property name="ObjectShortName">r_v0</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/r_pfn1" type="array">
+      <obj_property name="ElementShortName">r_pfn1[19:0]</obj_property>
+      <obj_property name="ObjectShortName">r_pfn1[19:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/r_c1" type="array">
+      <obj_property name="ElementShortName">r_c1[2:0]</obj_property>
+      <obj_property name="ObjectShortName">r_c1[2:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/r_d1" type="logic">
+      <obj_property name="ElementShortName">r_d1</obj_property>
+      <obj_property name="ObjectShortName">r_d1</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/r_v1" type="logic">
+      <obj_property name="ElementShortName">r_v1</obj_property>
+      <obj_property name="ObjectShortName">r_v1</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/tlb_vpn2" type="array">
+      <obj_property name="ElementShortName">tlb_vpn2[15:0][18:0]</obj_property>
+      <obj_property name="ObjectShortName">tlb_vpn2[15:0][18:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/tlb_asid" type="array">
+      <obj_property name="ElementShortName">tlb_asid[15:0][7:0]</obj_property>
+      <obj_property name="ObjectShortName">tlb_asid[15:0][7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/tlb_g" type="array">
+      <obj_property name="ElementShortName">tlb_g[15:0]</obj_property>
+      <obj_property name="ObjectShortName">tlb_g[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/tlb_pfn0" type="array">
+      <obj_property name="ElementShortName">tlb_pfn0[15:0][19:0]</obj_property>
+      <obj_property name="ObjectShortName">tlb_pfn0[15:0][19:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/tlb_c0" type="array">
+      <obj_property name="ElementShortName">tlb_c0[15:0][2:0]</obj_property>
+      <obj_property name="ObjectShortName">tlb_c0[15:0][2:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/tlb_d0" type="array">
+      <obj_property name="ElementShortName">tlb_d0[15:0]</obj_property>
+      <obj_property name="ObjectShortName">tlb_d0[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/tlb_v0" type="array">
+      <obj_property name="ElementShortName">tlb_v0[15:0]</obj_property>
+      <obj_property name="ObjectShortName">tlb_v0[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/tlb_pfn1" type="array">
+      <obj_property name="ElementShortName">tlb_pfn1[15:0][19:0]</obj_property>
+      <obj_property name="ObjectShortName">tlb_pfn1[15:0][19:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/tlb_c1" type="array">
+      <obj_property name="ElementShortName">tlb_c1[15:0][2:0]</obj_property>
+      <obj_property name="ObjectShortName">tlb_c1[15:0][2:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/tlb_d1" type="array">
+      <obj_property name="ElementShortName">tlb_d1[15:0]</obj_property>
+      <obj_property name="ObjectShortName">tlb_d1[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/tlb_v1" type="array">
+      <obj_property name="ElementShortName">tlb_v1[15:0]</obj_property>
+      <obj_property name="ObjectShortName">tlb_v1[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/match0" type="array">
+      <obj_property name="ElementShortName">match0[15:0]</obj_property>
+      <obj_property name="ObjectShortName">match0[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/s0_c0" type="array">
+      <obj_property name="ElementShortName">s0_c0[2:0]</obj_property>
+      <obj_property name="ObjectShortName">s0_c0[2:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/s0_d0" type="logic">
+      <obj_property name="ElementShortName">s0_d0</obj_property>
+      <obj_property name="ObjectShortName">s0_d0</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/s0_v0" type="logic">
+      <obj_property name="ElementShortName">s0_v0</obj_property>
+      <obj_property name="ObjectShortName">s0_v0</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/s0_c1" type="array">
+      <obj_property name="ElementShortName">s0_c1[2:0]</obj_property>
+      <obj_property name="ObjectShortName">s0_c1[2:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/s0_d1" type="logic">
+      <obj_property name="ElementShortName">s0_d1</obj_property>
+      <obj_property name="ObjectShortName">s0_d1</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/s0_v1" type="logic">
+      <obj_property name="ElementShortName">s0_v1</obj_property>
+      <obj_property name="ObjectShortName">s0_v1</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/match1" type="array">
+      <obj_property name="ElementShortName">match1[15:0]</obj_property>
+      <obj_property name="ObjectShortName">match1[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/s1_c0" type="array">
+      <obj_property name="ElementShortName">s1_c0[2:0]</obj_property>
+      <obj_property name="ObjectShortName">s1_c0[2:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/s1_d0" type="logic">
+      <obj_property name="ElementShortName">s1_d0</obj_property>
+      <obj_property name="ObjectShortName">s1_d0</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/s1_v0" type="logic">
+      <obj_property name="ElementShortName">s1_v0</obj_property>
+      <obj_property name="ObjectShortName">s1_v0</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/s1_c1" type="array">
+      <obj_property name="ElementShortName">s1_c1[2:0]</obj_property>
+      <obj_property name="ObjectShortName">s1_c1[2:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/s1_d1" type="logic">
+      <obj_property name="ElementShortName">s1_d1</obj_property>
+      <obj_property name="ObjectShortName">s1_d1</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/s1_v1" type="logic">
+      <obj_property name="ElementShortName">s1_v1</obj_property>
+      <obj_property name="ObjectShortName">s1_v1</obj_property>
+   </wvobject>
+   <wvobject fp_name="/testbench/tlb_top/tlb/TLBNUM" type="array">
+      <obj_property name="ElementShortName">TLBNUM[31:0]</obj_property>
+      <obj_property name="ObjectShortName">TLBNUM[31:0]</obj_property>
+   </wvobject>
+</wave_config>
