@@ -71,7 +71,7 @@ wire [1:0]  es_div_sel    ;
 wire [31:0] es_hi         ;
 wire [31:0] es_lo         ;
 wire es_mtlo,es_mthi,es_mflo,es_mfhi;
-
+wire [31:0] refetch_addr;
 wire es_mem_op_w          ;
 wire es_mem_op_wl         ;
 wire es_mem_op_wr         ;
@@ -90,7 +90,8 @@ wire        inst_tlbr;
 wire        inst_tlbwi;
 
 assign out_es_valid = es_valid;
-assign {inst_tlbr       ,//268
+assign {refetch_addr    ,//300:269
+        inst_tlbr       ,//268
         inst_tlbwi      ,//267
         inst_tlbp       ,//266
         overflow_en     ,//265
@@ -203,7 +204,8 @@ assign {
 
 assign es_res_from_mem = es_load_op;
 assign es_result = {32{es_mfhi}}&hi | {32{es_mflo}}&lo | es_alu_result;
-assign es_to_ms_bus = { inst_tlbr       ,//167
+assign es_to_ms_bus = { refetch_addr    ,//199:168
+                        inst_tlbr       ,//167
                         inst_tlbwi      ,//166
                         inst_tlbp       ,//165
                         s1_found        ,//164

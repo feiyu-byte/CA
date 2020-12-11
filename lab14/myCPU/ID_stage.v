@@ -43,11 +43,14 @@ reg         ds_valid   ;
 wire        ds_ready_go;
 
 wire [31                 :0] fs_pc;
+wire [31:0] nextpc;
 wire [31                 :0] fs_excp_bvaddr;
+wire [31:0] refetch_addr;
 reg  [`FS_TO_DS_BUS_WD -1:0] fs_to_ds_bus_r;
 assign fs_pc            = fs_to_ds_bus[31:0];
+assign nextpc = fs_to_ds_bus[134:103];
 //assign fs_excp_bvaddr   = fs_pc;
-
+assign refetch_addr = (fs_to_ds_valid)?fs_pc:nextpc;
 //exception tag: add here
 wire [7:0] cp0_dest;
 wire       ds_excp_valid;
@@ -273,7 +276,8 @@ assign make_bd =  (   inst_beq
 assign br_stall = ds_ready_go;
 assign br_bus       = {make_bd,br_stall,br_taken,br_target};
 
-assign ds_to_es_bus = { inst_tlbr       ,//268
+assign ds_to_es_bus = { refetch_addr    ,//300:269
+                        inst_tlbr       ,//268
                         inst_tlbwi      ,//267
                         inst_tlbp       ,//266
                         overflow_en     ,//265
@@ -544,7 +548,7 @@ assign br_taken = (   inst_beq  &&  rs_eq_rt
                    || inst_jr
                   ) && ds_valid;
 assign br_target = (   inst_beq || inst_bne || inst_bgez || inst_bgtz || inst_blez 
-					|| inst_bltz || inst_bltzal || inst_bgezal) ? (fs_pc+ 4 + {{14{imm[15]}}, imm[15:0], 2'b0}) :
+					|| inst_bltz || inst_bltzal || inst_bgezal) ? (ds_pc+ 4 + {{14{imm[15]}}, imm[15:0], 2'b0}) :
                    (inst_jr || inst_jalr)              ? rs_value :
                   /*inst_jal*/              {fs_pc[31:28], jidx[25:0], 2'b0};
 //for block

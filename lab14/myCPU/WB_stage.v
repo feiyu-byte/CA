@@ -44,7 +44,7 @@ assign go_excp_entry = ws_excp_valid;
 assign ws_inst_eret = inst_eret;
 //bug1!!!
 assign tlb_refetch = (inst_tlbwi | inst_tlbr)&& ws_valid;
-assign refetch_addr = ms_pc;
+//assign refetch_addr = ms_pc;
 reg         ws_valid;
 wire        ws_ready_go;
 reg [`MS_TO_WS_BUS_WD -1:0] ms_to_ws_bus_r;
@@ -77,7 +77,8 @@ wire        s1_found;
 wire [3:0]  s1_index;
 assign out_ws_valid = ws_valid;
 
-assign {inst_tlbr       ,//159
+assign {refetch_addr    ,//191:160
+        inst_tlbr       ,//159
         inst_tlbwi      ,//158
         inst_tlbp       ,//157
         s1_found        ,//156

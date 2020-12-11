@@ -229,7 +229,7 @@ assign r_index = cp0_index_Index;
 assign w_index = cp0_index_Index;
 assign w_vpn2 = cp0_EntryHi_VPN2;
 assign w_asid = cp0_EntryHi_ASID;
-assign w_g = cp0_EntryLo1_G1 | cp0_EntryLo0_G0;
+assign w_g = cp0_EntryLo1_G1 & cp0_EntryLo0_G0; //!!!&
 assign w_pfn0 = cp0_EntryLo0_PFN0;
 assign w_c0 = cp0_EntryLo0_C0;
 assign w_d0 = cp0_EntryLo0_D0;
@@ -406,7 +406,7 @@ always @(posedge clk ) begin
         cp0_index_Index <= cp0_wdata[3:0];
     end
     else if (tlbp_we)begin
-        cp0_index_P <= s1_found;
+        cp0_index_P <= !s1_found;//P=0 found P=1 notfound
         cp0_index_Index <= s1_index;
     end
 end

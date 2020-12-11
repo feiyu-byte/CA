@@ -33,7 +33,7 @@ assign ms_mtc0 = inst_mtc0;
 assign ms_c0_addr = cp0_dest;
 reg         ms_valid;
 wire        ms_ready_go;
-
+wire [31:0] refetch_addr;
 reg [`ES_TO_MS_BUS_WD -1:0] es_to_ms_bus_r;
 wire        ms_res_from_mem;
 wire        ms_gr_we;
@@ -92,7 +92,8 @@ wire       inst_tlbp;
 wire       inst_tlbr;
 wire       inst_tlbwi;
 assign out_ms_valid = ms_valid;
-assign {inst_tlbr       ,//167
+assign {refetch_addr    ,//199:168
+        inst_tlbr       ,//167
         inst_tlbwi      ,//166
         inst_tlbp       ,//165
         s1_found        ,//164
@@ -138,7 +139,8 @@ assign {
         cp0_status_IE   //0
 } = cp0_general_bus;
 
-assign ms_to_ws_bus = { inst_tlbr       ,//159
+assign ms_to_ws_bus = { refetch_addr    ,//191:160
+                        inst_tlbr       ,//159
                         inst_tlbwi      ,//158
                         inst_tlbp       ,//157
                         s1_found        ,//156

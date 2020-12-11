@@ -65,7 +65,7 @@ always @(posedge clk) begin
         // reset
         br_bus_r <= 0;
     end
-    else if (make_bd /*|| !make_bd&&(br_stall_r==0 && br_stall)*/) begin
+    else if (make_bd || !make_bd&&(br_stall_r==0 && br_stall)) begin
         br_bus_r <= br_bus;        
     end
     else if (!br_bus_valid & inst_sram_data_ok) begin
@@ -126,7 +126,8 @@ assign {
 
 wire [31:0] fs_inst;
 reg  [31:0] fs_pc;
-assign fs_to_ds_bus = { fs_excp_bvaddr, //102:71
+assign fs_to_ds_bus = { nextpc,//134:103
+                        fs_excp_bvaddr, //102:71
                         fs_bd,          //70
                         fs_excp_valid,  //69
                         fs_excp_execode,//68:64
@@ -167,7 +168,7 @@ always @(posedge clk) begin
         fs_pc <= cp0_EPC_bus-32'h4;
     end
     else if(tlb_refetch) begin
-        fs_pc <= refetch_addr/*-32'h4*/;
+        fs_pc <= refetch_addr-32'h4;
     end
     else if (to_fs_valid && fs_allowin && to_fs_ready_go) begin
         fs_pc <= nextpc;
